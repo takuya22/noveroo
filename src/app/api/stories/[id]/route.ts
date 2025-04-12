@@ -9,7 +9,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const storyId = params.id;
+  const p = await params;
+  const storyId = p.id;
   const session = await getServerSession(authOptions);
 
   // 認証チェック
@@ -33,6 +34,7 @@ export async function GET(
     }
 
     const storyData = storySnap.data();
+    console.log('Fetched story data:', storyData);
     
     // アクセス権限チェック（非公開ストーリーは作成者のみアクセス可能）
     if (
@@ -45,6 +47,7 @@ export async function GET(
       );
     }
 
+    console.log('Story data:', storyData);
     // レスポンスを返す
     return NextResponse.json({
       id: storyId,

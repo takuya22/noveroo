@@ -24,7 +24,7 @@ export const useStories = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/stories");
+      const response = await fetch("/api/stories?type=user");
       
       if (!response.ok) {
         const errorData = await response.json();

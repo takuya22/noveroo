@@ -1,5 +1,5 @@
 // Firebaseを使ったストーリー関連の操作
-import { db } from './firebase';
+import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, limit } from 'firebase/firestore';
 import { Story, createEmptyStoryData } from './storyModel';
 
@@ -48,6 +48,7 @@ export async function getUserStories(userId: string) {
     );
     
     const querySnapshot = await getDocs(q);
+    console.log('User stories:', querySnapshot.docs);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
