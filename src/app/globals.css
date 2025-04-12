@@ -48,3 +48,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+textarea, input, select {
+  color: #333333;
+}
