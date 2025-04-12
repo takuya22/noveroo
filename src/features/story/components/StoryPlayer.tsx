@@ -1,9 +1,37 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Story, Scene, Choice } from '@/utils/storyModel';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
 import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
+
+// テキスト内の話者情報と対応するテキストを解析する関数
+const parseTextWithSpeakers = (text: string) => {
+  // 複数の話者パターンを抽出するための正規表現
+  const speakerSegmentPattern = /(\([^)]+\))([^(]*)/g;
+  
+  // 結果を格納する配列
+  const segments: Array<{speaker: string, text: string}> = [];
+  let match;
+  
+  // すべての話者セグメントを抽出
+  while ((match = speakerSegmentPattern.exec(text)) !== null) {
+    const speakerWithBrackets = match[1]; // (話者名)
+    const speaker = speakerWithBrackets.substring(1, speakerWithBrackets.length - 1); // 括弧を取り除く
+    const segmentText = match[2].trim(); // 対応するテキスト
+    
+    if (segmentText) {
+      segments.push({ speaker, text: segmentText });
+    }
+  }
+  
+  // 話者が見つからなかった場合は、テキスト全体を無名のセグメントとして追加
+  if (segments.length === 0 && text.trim()) {
+    segments.push({ speaker: '', text: text.trim() });
+  }
+  
+  return segments;
+};
 
 interface StoryPlayerProps {
   story: Story;
@@ -28,6 +56,11 @@ export default function StoryPlayer({
   const [displayedText, setDisplayedText] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [textComplete, setTextComplete] = useState<boolean>(false);
+  const [currentSpeaker, setCurrentSpeaker] = useState<string>('');
+  
+  // テキストセグメント（話者ごとに分割されたテキスト）
+  const [textSegments, setTextSegments] = useState<Array<{speaker: string, text: string}>>([]);
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
   
   // 選択肢の表示状態
   const [showChoices, setShowChoices] = useState<boolean>(false);
@@ -118,6 +151,7 @@ export default function StoryPlayer({
     };
   }, [isTyping, textComplete, activeScene, showHistory, showSettings]);
   
+  // シーンが初期化されたときに、テキストセグメントを解析
   useEffect(() => {
     // シーンマップを構築
     const map: Record<string, Scene> = {};
@@ -151,6 +185,10 @@ export default function StoryPlayer({
     
     const scene = scenesMap.current[currentSceneId];
     
+    // テキストセグメントを解析
+    const fullText = language === 'ja' ? scene.text : (scene.text_en || scene.text);
+    const segments = parseTextWithSpeakers(fullText);
+    
     // トランジションエフェクト
     setTransition(true);
     setTimeout(() => {
@@ -160,16 +198,31 @@ export default function StoryPlayer({
       setDisplayedText('');
       setIsTyping(true);
       setTransition(false);
+      setTextSegments(segments);
+      setCurrentSegmentIndex(0);
+      
+      // 最初の話者をセット（存在する場合）
+      if (segments.length > 0) {
+        setCurrentSpeaker(segments[0].speaker);
+      } else {
+        setCurrentSpeaker('');
+      }
       
       // テキストアニメーション開始
+      let timeout: NodeJS.Timeout;
       const startTextAnimation = () => {
-        const fullText = language === 'ja' ? scene.text : (scene.text_en || scene.text);
+        // 全テキストを連結
+        const fullText = segments.map(segment => segment.text).join('');
         let i = 0;
         
         const typeText = () => {
           if (i < fullText.length) {
-            setDisplayedText(fullText.substring(0, i + 1));
+            const currentText = fullText.substring(0, i + 1);
+            setDisplayedText(currentText);
             i++;
+            
+            // 現在の話者を更新
+            updateCurrentSpeaker(i, segments);
             
             // タイプ効果音 (効果音がオンの場合)
             if (sfxOn && i % 5 === 0) {
@@ -204,6 +257,20 @@ export default function StoryPlayer({
     };
   }, [currentSceneId, language, autoMode, typingSpeed, sfxOn]);
   
+  // 現在の話者を更新
+  const updateCurrentSpeaker = (position: number, segments: Array<{speaker: string, text: string}>) => {
+    let accumulatedLength = 0;
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      if (accumulatedLength <= position && accumulatedLength + segment.text.length > position) {
+        setCurrentSpeaker(segment.speaker);
+        setCurrentSegmentIndex(i);
+        return;
+      }
+      accumulatedLength += segment.text.length;
+    }
+  };
+  
   // タイピング効果音を再生する関数
   const playTypingSfx = () => {
     // 実際の効果音処理はここに実装
@@ -215,7 +282,17 @@ export default function StoryPlayer({
     if (!activeScene) return;
     
     const fullText = language === 'ja' ? activeScene.text : (activeScene.text_en || activeScene.text);
-    setDisplayedText(fullText);
+    const segments = parseTextWithSpeakers(fullText);
+    const allText = segments.map(segment => segment.text).join('');
+    
+    // 最後のセグメントを表示
+    if (segments.length > 0) {
+      const lastSegment = segments[segments.length - 1];
+      setCurrentSpeaker(lastSegment.speaker);
+      setCurrentSegmentIndex(segments.length - 1);
+    }
+    
+    setDisplayedText(allText);
     setIsTyping(false);
     setTextComplete(true);
     setShowChoices(true);
@@ -368,6 +445,52 @@ export default function StoryPlayer({
     }
   };
   
+  // テキストを表示用に変換
+  const renderDisplayedText = (): ReactNode => {
+    // テキストセグメントがない場合は単純に表示
+    if (textSegments.length === 0) {
+      return displayedText;
+    }
+    
+    // テキストを位置に基づいてセグメントに分割
+    const result: ReactNode[] = [];
+    let accumulatedLength = 0;
+    
+    for (let i = 0; i < textSegments.length; i++) {
+      const segment = textSegments[i];
+      
+      if (accumulatedLength >= displayedText.length) {
+        // このセグメントはまだ表示されていない
+        break;
+      }
+      
+      const segmentStartPos = accumulatedLength;
+      const segmentEndPos = accumulatedLength + segment.text.length;
+      
+      if (segmentEndPos <= displayedText.length) {
+        // このセグメントは完全に表示されている
+        result.push(
+          <span key={i} className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}>
+            {segment.text}
+          </span>
+        );
+      } else if (segmentStartPos < displayedText.length) {
+        // このセグメントは部分的に表示されている
+        const visiblePart = segment.text.substring(0, displayedText.length - segmentStartPos);
+        
+        result.push(
+          <span key={i} className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}>
+            {visiblePart}
+          </span>
+        );
+      }
+      
+      accumulatedLength += segment.text.length;
+    }
+    
+    return result;
+  };
+  
   if (!activeScene) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
@@ -444,7 +567,7 @@ export default function StoryPlayer({
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
                 </svg>
               </button>
@@ -702,16 +825,16 @@ export default function StoryPlayer({
               nightMode ? 'border-gray-700' : 'border-gray-200'
             } p-6 min-h-[200px] cursor-pointer shadow-2xl transition-colors duration-300`}
           >
-            {/* 話者名（キャラクター名） */}
-            {activeScene.characters && activeScene.characters.length > 0 && (
+            {/* 話者名（現在の位置に基づいて表示） */}
+            {currentSpeaker && (
               <div className="inline-block bg-[var(--primary)] text-white px-4 py-1.5 rounded-tl-md rounded-tr-md rounded-br-md mb-3 shadow-md">
-                {activeScene.characters[0].id}
+                {currentSpeaker}
               </div>
             )}
             
-            {/* テキスト */}
+            {/* テキスト - セグメントごとに表示 */}
             <div className={`${getTextSizeClass()} leading-relaxed ${nightMode ? 'text-gray-100' : 'text-gray-800'}`}>
-              {displayedText}
+              {renderDisplayedText()}
               {isTyping && <span className="animate-pulse ml-0.5">|</span>}
             </div>
             
@@ -825,6 +948,12 @@ export default function StoryPlayer({
         }
         .text-shadow {
           text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .current-segment {
+          font-weight: 500;
+        }
+        .segment-text {
+          transition: all 0.2s ease;
         }
       `}</style>
     </div>
