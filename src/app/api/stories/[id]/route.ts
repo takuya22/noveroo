@@ -34,8 +34,7 @@ export async function GET(
     }
 
     const storyData = storySnap.data();
-    console.log('Fetched story data:', storyData);
-    
+
     // アクセス権限チェック（非公開ストーリーは作成者のみアクセス可能）
     if (
       storyData.metadata?.visibility !== 'public' && 
@@ -47,7 +46,6 @@ export async function GET(
       );
     }
 
-    console.log('Story data:', storyData);
     // レスポンスを返す
     return NextResponse.json({
       id: storyId,

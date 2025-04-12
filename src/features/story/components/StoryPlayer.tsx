@@ -38,8 +38,21 @@ export default function StoryPlayer({
   // 学習ポイントの表示状態
   const [showLearningPoint, setShowLearningPoint] = useState<boolean>(false);
   
+  // UI関連の状態
+  const [showControls, setShowControls] = useState<boolean>(true); // コントロール表示状態
+  const [showSettings, setShowSettings] = useState<boolean>(false); // 設定パネル表示状態
+  const [textSize, setTextSize] = useState<string>('medium'); // テキストサイズ
+  const [musicOn, setMusicOn] = useState<boolean>(false); // BGM
+  const [sfxOn, setSfxOn] = useState<boolean>(true); // 効果音
+  const [nightMode, setNightMode] = useState<boolean>(false); // ナイトモード
+  const [showUI, setShowUI] = useState<boolean>(true); // UI表示状態
+  
+  // シーン切り替えエフェクト
+  const [transition, setTransition] = useState<boolean>(false);
+  
   // 履歴管理
   const [history, setHistory] = useState<Array<{sceneId: string, choice?: string}>>([]);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
   
   // プレイデータ（進捗や選択を記録）
   const [playData, setPlayData] = useState<{
@@ -59,6 +72,51 @@ export default function StoryPlayer({
   
   // シーンマップの作成（検索を効率化）
   const scenesMap = useRef<Record<string, Scene>>({});
+
+  // UI表示/非表示の切り替え (F11キーのような全画面表示)
+  const toggleUI = () => {
+    setShowUI(!showUI);
+  };
+  
+  // キーボードショートカット
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // スペースキーで次へ進む/テキストスキップ
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isTyping) {
+          skipTextAnimation();
+        } else if (textComplete && (!activeScene?.choices || activeScene.choices.length === 0)) {
+          handleContinue();
+        }
+      }
+      
+      // Aキーで自動モード切り替え
+      if (e.code === 'KeyA') {
+        toggleAutoMode();
+      }
+      
+      // Hキーで履歴表示切り替え
+      if (e.code === 'KeyH') {
+        setShowHistory(!showHistory);
+      }
+      
+      // Sキーで設定表示切り替え
+      if (e.code === 'KeyS') {
+        setShowSettings(!showSettings);
+      }
+      
+      // Fキーでフルスクリーン切り替え
+      if (e.code === 'KeyF') {
+        toggleUI();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isTyping, textComplete, activeScene, showHistory, showSettings]);
   
   useEffect(() => {
     // シーンマップを構築
@@ -92,47 +150,65 @@ export default function StoryPlayer({
     if (!currentSceneId || !scenesMap.current[currentSceneId]) return;
     
     const scene = scenesMap.current[currentSceneId];
-    setActiveScene(scene);
-    setTextComplete(false);
-    setShowChoices(false);
-    setDisplayedText('');
-    setIsTyping(true);
     
-    // テキストアニメーション開始
-    let timeout: NodeJS.Timeout;
-    const startTextAnimation = () => {
-      const fullText = language === 'ja' ? scene.text : (scene.text_en || scene.text);
-      let i = 0;
+    // トランジションエフェクト
+    setTransition(true);
+    setTimeout(() => {
+      setActiveScene(scene);
+      setTextComplete(false);
+      setShowChoices(false);
+      setDisplayedText('');
+      setIsTyping(true);
+      setTransition(false);
       
-      const typeText = () => {
-        if (i < fullText.length) {
-          setDisplayedText(fullText.substring(0, i + 1));
-          i++;
-          timeout = setTimeout(typeText, typingSpeed);
-        } else {
-          setIsTyping(false);
-          setTextComplete(true);
-          setShowChoices(true);
-          
-          // 自動モードの場合、選択肢がなければ自動的に次へ
-          if (autoMode && (!scene.choices || scene.choices.length === 0)) {
-            autoModeTimeoutRef.current = setTimeout(() => {
-              handleContinue();
-            }, 2000);
+      // テキストアニメーション開始
+      const startTextAnimation = () => {
+        const fullText = language === 'ja' ? scene.text : (scene.text_en || scene.text);
+        let i = 0;
+        
+        const typeText = () => {
+          if (i < fullText.length) {
+            setDisplayedText(fullText.substring(0, i + 1));
+            i++;
+            
+            // タイプ効果音 (効果音がオンの場合)
+            if (sfxOn && i % 5 === 0) {
+              playTypingSfx();
+            }
+            
+            timeout = setTimeout(typeText, typingSpeed);
+          } else {
+            setIsTyping(false);
+            setTextComplete(true);
+            setShowChoices(true);
+            
+            // 自動モードの場合、選択肢がなければ自動的に次へ
+            if (autoMode && (!scene.choices || scene.choices.length === 0)) {
+              autoModeTimeoutRef.current = setTimeout(() => {
+                handleContinue();
+              }, 2000);
+            }
           }
-        }
+        };
+        
+        typeText();
       };
       
-      typeText();
-    };
-    
-    startTextAnimation();
+      startTextAnimation();
+    }, 500); // トランジション時間
     
     // クリーンアップ
     return () => {
+      let timeout: NodeJS.Timeout;
       clearTimeout(timeout);
     };
-  }, [currentSceneId, language, autoMode, typingSpeed]);
+  }, [currentSceneId, language, autoMode, typingSpeed, sfxOn]);
+  
+  // タイピング効果音を再生する関数
+  const playTypingSfx = () => {
+    // 実際の効果音処理はここに実装
+    // この例では処理だけを入れておく
+  };
   
   // テキストを一気に表示する
   const skipTextAnimation = () => {
@@ -148,6 +224,11 @@ export default function StoryPlayer({
   // 選択肢をクリックしたときの処理
   const handleChoiceClick = (choice: Choice) => {
     if (!activeScene) return;
+    
+    // 選択効果音 (効果音がオンの場合)
+    if (sfxOn) {
+      // 選択肢クリック効果音を再生
+    }
     
     // 選択を記録
     setPlayData(prev => ({
@@ -205,13 +286,44 @@ export default function StoryPlayer({
     setTypingSpeed(speed);
   };
   
+  // テキストサイズの変更
+  const changeTextSize = (size: string) => {
+    setTextSize(size);
+  };
+  
+  // BGMの切り替え
+  const toggleMusic = () => {
+    setMusicOn(prev => !prev);
+    // BGMの再生・停止ロジックをここに追加
+  };
+  
+  // 効果音の切り替え
+  const toggleSfx = () => {
+    setSfxOn(prev => !prev);
+  };
+  
+  // ナイトモードの切り替え
+  const toggleNightMode = () => {
+    setNightMode(prev => !prev);
+  };
+  
   // 学習ポイントの表示切り替え
   const toggleLearningPoint = () => {
     setShowLearningPoint(prev => !prev);
+    // 学習ポイント表示効果音
+    if (sfxOn) {
+      // 効果音再生
+    }
   };
   
   // シーンのテキストか選択肢をクリックしたときの処理
   const handleScreenClick = () => {
+    // UI要素が非表示の場合は、クリックでUI表示に戻る
+    if (!showUI) {
+      setShowUI(true);
+      return;
+    }
+    
     if (isTyping) {
       // テキストアニメーション中なら、アニメーションをスキップ
       skipTextAnimation();
@@ -230,129 +342,377 @@ export default function StoryPlayer({
       return {
         backgroundImage: `url(${activeScene.sceneImageUrl})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        filter: nightMode ? 'brightness(0.7) contrast(1.1)' : 'none',
+        transition: 'filter 0.5s ease'
       };
     }
     
     // デフォルトのグラデーション背景
     return {
-      background: 'linear-gradient(135deg, rgba(176, 224, 255, 0.8) 0%, rgba(218, 249, 255, 0.9) 100%)'
+      background: nightMode 
+        ? 'linear-gradient(135deg, rgba(25, 55, 100, 0.9) 0%, rgba(40, 80, 130, 0.95) 100%)'
+        : 'linear-gradient(135deg, rgba(176, 224, 255, 0.8) 0%, rgba(218, 249, 255, 0.9) 100%)',
+      transition: 'background 0.5s ease'
     };
+  };
+  
+  // テキストサイズに基づいたクラス名を取得
+  const getTextSizeClass = () => {
+    switch (textSize) {
+      case 'small': return 'text-base';
+      case 'medium': return 'text-lg';
+      case 'large': return 'text-xl';
+      case 'xlarge': return 'text-2xl';
+      default: return 'text-lg';
+    }
   };
   
   if (!activeScene) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="flex items-center justify-center h-screen bg-gray-900">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-[var(--primary)] border-gray-200 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
+          <div className="w-16 h-16 border-4 border-t-[var(--primary)] border-gray-700 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-white">ストーリーを読み込み中...</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className={`relative ${standalone ? 'min-h-screen' : 'min-h-[600px]'} bg-black`}>
-      {/* 閉じるボタン */}
-      {onClose && (
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <div 
+      className={`relative ${standalone ? 'min-h-screen' : 'min-h-[600px]'} bg-black overflow-hidden`}
+      onClick={handleScreenClick}
+    >
+      {/* ツールバー（上部に表示するUI） */}
+      {showUI && showControls && (
+        <div className="absolute top-0 left-0 right-0 z-30 bg-black bg-opacity-40 backdrop-blur-sm text-white p-2 flex justify-between items-center transition-opacity duration-300">
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
+              className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              title="設定"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowHistory(!showHistory); }}
+              className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              title="履歴"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleAutoMode(); }}
+              className={`p-2 rounded-full transition-colors ${autoMode ? 'bg-[var(--primary)] hover:bg-[var(--primary-dark)]' : 'hover:bg-gray-700'}`}
+              title="自動再生"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleUI(); }}
+              className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              title="フルスクリーン"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+              </svg>
+            </button>
+          </div>
+          
+          <h1 className="text-white text-shadow font-bold text-lg">
+            {story.title}
+          </h1>
+          
+          <div className="flex items-center space-x-3">
+            {activeScene.learningPoint && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); toggleLearningPoint(); }}
+                className={`p-2 rounded-full transition-colors ${showLearningPoint ? 'bg-[var(--primary)]' : 'hover:bg-gray-700'}`}
+                title="学習ポイント"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                </svg>
+              </button>
+            )}
+            
+            {onClose && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+                title="閉じる"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
       )}
       
-      {/* ゲームタイトル */}
-      <div className="absolute top-4 left-4 z-10">
-        <h1 className="text-white text-shadow font-bold text-lg bg-gray-800 bg-opacity-50 px-3 py-1 rounded-lg">
-          {story.title}
-        </h1>
-      </div>
+      {/* 設定パネル */}
+      {showSettings && (
+        <div 
+          className="absolute inset-x-0 top-12 z-40 bg-gray-900 bg-opacity-95 backdrop-blur-md p-4 border-b border-gray-700 text-white"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-4 flex justify-between items-center">
+            <h3 className="font-semibold">ゲーム設定</h3>
+            <button 
+              onClick={() => setShowSettings(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-300 mb-2">テキスト表示速度</p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => changeTypingSpeed(10)}
+                  className={`px-3 py-1 rounded-md ${typingSpeed === 10 ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  速い
+                </button>
+                <button
+                  onClick={() => changeTypingSpeed(30)}
+                  className={`px-3 py-1 rounded-md ${typingSpeed === 30 ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  普通
+                </button>
+                <button
+                  onClick={() => changeTypingSpeed(50)}
+                  className={`px-3 py-1 rounded-md ${typingSpeed === 50 ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  遅い
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-300 mb-2">テキストサイズ</p>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => changeTextSize('small')}
+                  className={`px-3 py-1 rounded-md ${textSize === 'small' ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  小
+                </button>
+                <button
+                  onClick={() => changeTextSize('medium')}
+                  className={`px-3 py-1 rounded-md ${textSize === 'medium' ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  中
+                </button>
+                <button
+                  onClick={() => changeTextSize('large')}
+                  className={`px-3 py-1 rounded-md ${textSize === 'large' ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  大
+                </button>
+                <button
+                  onClick={() => changeTextSize('xlarge')}
+                  className={`px-3 py-1 rounded-md ${textSize === 'xlarge' ? 'bg-[var(--primary)] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  特大
+                </button>
+              </div>
+            </div>
+            
+            <div className="col-span-2">
+              <div className="flex justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-300">BGM</span>
+                  <button 
+                    onClick={toggleMusic}
+                    className={`w-12 h-6 rounded-full flex items-center ${musicOn ? 'bg-[var(--primary)]' : 'bg-gray-700'} transition-colors`}
+                  >
+                    <span className={`w-5 h-5 rounded-full transform transition-transform ${musicOn ? 'translate-x-6 bg-white' : 'translate-x-1 bg-gray-400'}`}></span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-300">効果音</span>
+                  <button 
+                    onClick={toggleSfx}
+                    className={`w-12 h-6 rounded-full flex items-center ${sfxOn ? 'bg-[var(--primary)]' : 'bg-gray-700'} transition-colors`}
+                  >
+                    <span className={`w-5 h-5 rounded-full transform transition-transform ${sfxOn ? 'translate-x-6 bg-white' : 'translate-x-1 bg-gray-400'}`}></span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-300">ナイトモード</span>
+                  <button 
+                    onClick={toggleNightMode}
+                    className={`w-12 h-6 rounded-full flex items-center ${nightMode ? 'bg-[var(--primary)]' : 'bg-gray-700'} transition-colors`}
+                  >
+                    <span className={`w-5 h-5 rounded-full transform transition-transform ${nightMode ? 'translate-x-6 bg-white' : 'translate-x-1 bg-gray-400'}`}></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 text-xs text-gray-400">
+            <p>キーボードショートカット: スペース(次へ), A(自動), H(履歴), S(設定), F(UI表示切替)</p>
+          </div>
+        </div>
+      )}
       
-      {/* 自動モードと設定ボタン */}
-      <div className="absolute top-4 right-16 z-10 flex space-x-2">
-        <button 
-          onClick={toggleAutoMode}
-          className={`bg-gray-800 bg-opacity-50 text-white px-3 py-1 rounded-lg hover:bg-opacity-70 transition-colors ${autoMode ? 'bg-[var(--primary)] bg-opacity-70' : ''}`}
+      {/* 履歴パネル */}
+      {showHistory && (
+        <div 
+          className="absolute inset-0 z-40 bg-gray-900 bg-opacity-95 backdrop-blur-md p-4 text-white overflow-auto"
+          onClick={(e) => e.stopPropagation()}
         >
-          自動
-        </button>
-        <button 
-          onClick={() => changeTypingSpeed(typingSpeed === 30 ? 10 : 30)}
-          className="bg-gray-800 bg-opacity-50 text-white px-3 py-1 rounded-lg hover:bg-opacity-70 transition-colors"
+          <div className="mb-4 flex justify-between items-center">
+            <h3 className="font-semibold">履歴</h3>
+            <button 
+              onClick={() => setShowHistory(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+            {history.map((item, index) => {
+              const scene = scenesMap.current[item.sceneId];
+              if (!scene) return null;
+              
+              return (
+                <div key={index} className="border-b border-gray-700 pb-4">
+                  {index > 0 && item.choice && (
+                    <div className="mb-2 text-sm text-[var(--primary-light)] italic">
+                      選択: {item.choice}
+                    </div>
+                  )}
+                  <div className="text-gray-200">
+                    {language === 'ja' ? scene.text : (scene.text_en || scene.text)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
+      {/* 学習ポイントが表示されている場合のオーバーレイ */}
+      {showLearningPoint && activeScene.learningPoint && (
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-90 backdrop-blur-sm z-20 flex items-center justify-center p-8"
+          onClick={(e) => e.stopPropagation()}
         >
-          {typingSpeed === 30 ? '速く' : '通常'}
-        </button>
-      </div>
+          <div className="bg-gray-800 rounded-lg max-w-2xl w-full p-6 shadow-xl border border-[var(--primary)] animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white">学習ポイント</h3>
+              </div>
+              <button 
+                onClick={toggleLearningPoint}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="bg-gray-700 rounded-lg p-5">
+              <h4 className="text-lg font-semibold text-[var(--primary-light)] mb-3">{activeScene.learningPoint.title}</h4>
+              <p className="text-gray-100 leading-relaxed">{activeScene.learningPoint.content}</p>
+              
+              <div className="mt-8 flex justify-between items-center">
+                <div className="flex items-center text-gray-300 text-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-[var(--primary-light)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  このポイントはストーリー内でいつでも確認できます
+                </div>
+                <button 
+                  onClick={toggleLearningPoint}
+                  className="px-5 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary-dark)] transition-colors shadow-lg"
+                >
+                  ストーリーに戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* トランジションオーバーレイ */}
+      <div 
+        className={`absolute inset-0 bg-black z-10 pointer-events-none transition-opacity duration-500 ${
+          transition ? 'opacity-100' : 'opacity-0'
+        }`}
+      ></div>
       
       {/* 背景エリア */}
       <div 
         className="relative w-full h-full min-h-screen flex flex-col"
         style={getBackgroundStyle()}
       >
-        {/* 学習ポイントが表示されている場合のオーバーレイ */}
-        {showLearningPoint && activeScene.learningPoint && (
-          <div className="absolute inset-0 bg-black bg-opacity-80 z-20 flex items-center justify-center p-8">
-            <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-[var(--primary)]">学習ポイント</h3>
-                <button 
-                  onClick={toggleLearningPoint}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <h4 className="text-lg font-semibold mb-2">{activeScene.learningPoint.title}</h4>
-              <p className="text-gray-700">{activeScene.learningPoint.content}</p>
-              <div className="mt-6 text-right">
-                <button 
-                  onClick={toggleLearningPoint}
-                  className="px-4 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary-dark)] transition-colors"
-                >
-                  閉じる
-                </button>
-              </div>
+        {/* キャラクターが表示されるエリア（今後実装） */}
+        <div className="min-h-[300px] flex items-center justify-center">
+          {/* キャラクター表示エリア（将来的に実装） */}
+          {activeScene.characters && activeScene.characters.length > 0 && (
+            <div className="absolute bottom-[200px] left-1/2 transform -translate-x-1/2">
+              {/* ここにキャラクターのシルエットや画像を表示 */}
+              <div className="w-64 h-64 opacity-70 rounded-full bg-gradient-to-b from-transparent to-black/20 mx-auto"></div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
         
         {/* テキストとUI表示エリア */}
-        <div className="mt-auto">
-          {/* キャラクターが表示されるエリア（今後実装） */}
-          <div className="min-h-[300px]"></div>
-          
+        <div className={`mt-auto transition-all duration-300 ${!showUI ? 'opacity-0' : 'opacity-100'}`}>
           {/* テキストボックス */}
           <div 
-            className="relative bg-white bg-opacity-90 border-t border-gray-200 p-6 min-h-[200px] cursor-pointer"
-            onClick={handleScreenClick}
+            className={`relative ${
+              nightMode ? 'bg-gray-900 bg-opacity-85' : 'bg-white bg-opacity-90'
+            } border-t ${
+              nightMode ? 'border-gray-700' : 'border-gray-200'
+            } p-6 min-h-[200px] cursor-pointer shadow-2xl transition-colors duration-300`}
           >
-            {/* 学習ポイントボタン */}
-            {activeScene.learningPoint && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); toggleLearningPoint(); }}
-                className="absolute top-4 right-4 bg-[var(--primary)] text-white px-3 py-1 text-sm rounded-full hover:bg-[var(--primary-dark)] transition-colors"
-              >
-                学習ポイント
-              </button>
-            )}
-            
             {/* 話者名（キャラクター名） */}
             {activeScene.characters && activeScene.characters.length > 0 && (
-              <div className="inline-block bg-[var(--primary)] text-white px-3 py-1 rounded-tl-md rounded-tr-md rounded-br-md mb-2">
+              <div className="inline-block bg-[var(--primary)] text-white px-4 py-1.5 rounded-tl-md rounded-tr-md rounded-br-md mb-3 shadow-md">
                 {activeScene.characters[0].id}
               </div>
             )}
             
             {/* テキスト */}
-            <div className="text-lg leading-relaxed">
+            <div className={`${getTextSizeClass()} leading-relaxed ${nightMode ? 'text-gray-100' : 'text-gray-800'}`}>
               {displayedText}
-              {isTyping && <span className="animate-pulse">|</span>}
+              {isTyping && <span className="animate-pulse ml-0.5">|</span>}
             </div>
             
             {/* スキップ・続けるボタン */}
@@ -360,7 +720,7 @@ export default function StoryPlayer({
               <div className="absolute bottom-4 right-4">
                 <button 
                   onClick={(e) => { e.stopPropagation(); skipTextAnimation(); }}
-                  className="text-[var(--primary)] hover:text-[var(--primary-dark)] text-sm underline"
+                  className={`${nightMode ? 'text-[var(--primary-light)]' : 'text-[var(--primary)]'} hover:text-[var(--primary-dark)] text-sm underline transition-colors`}
                 >
                   スキップ
                 </button>
@@ -368,7 +728,9 @@ export default function StoryPlayer({
             ) : textComplete && (!activeScene.choices || activeScene.choices.length === 0) && (
               <div className="absolute bottom-4 right-4">
                 <div className="flex items-center">
-                  <span className="text-gray-500 mr-2 text-sm animate-pulse">クリックで続ける</span>
+                  <span className={`${nightMode ? 'text-gray-400' : 'text-gray-500'} mr-2 text-sm animate-pulse`}>
+                    クリックで続ける
+                  </span>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -379,20 +741,92 @@ export default function StoryPlayer({
           
           {/* 選択肢 */}
           {showChoices && activeScene.choices && activeScene.choices.length > 0 && (
-            <div className="bg-gray-100 p-6 space-y-3">
+            <div className={`${
+              nightMode ? 'bg-gray-800' : 'bg-gray-100'
+            } p-6 space-y-3 transition-colors duration-300`}>
               {activeScene.choices.map((choice, index) => (
                 <button
                   key={index}
-                  onClick={() => handleChoiceClick(choice)}
-                  className="w-full text-left p-4 bg-white border border-gray-200 rounded-lg hover:bg-[var(--primary-light)] hover:border-[var(--primary)] transition-colors"
+                  onClick={(e) => { e.stopPropagation(); handleChoiceClick(choice); }}
+                  className={`w-full text-left p-4 rounded-lg transition-all duration-200 transform hover:scale-[1.01] hover:shadow-lg ${
+                    nightMode 
+                      ? 'bg-gray-700 border border-gray-600 text-white hover:bg-gray-600 hover:border-[var(--primary)]' 
+                      : 'bg-white border border-gray-200 text-gray-800 hover:bg-[var(--primary-light)] hover:border-[var(--primary)]'
+                  }`}
                 >
-                  {choice.text}
+                  <div className="flex items-center">
+                    <span className={`inline-block w-6 h-6 rounded-full mr-3 flex-shrink-0 ${
+                      nightMode ? 'bg-gray-600 text-white' : 'bg-[var(--primary-light)] text-[var(--primary)]'
+                    } text-xs flex items-center justify-center font-bold`}>
+                      {index + 1}
+                    </span>
+                    <span className={getTextSizeClass()}>{choice.text}</span>
+                  </div>
                 </button>
               ))}
             </div>
           )}
         </div>
       </div>
+      
+      {/* モバイル用コントロールバー（画面下部） */}
+      {showUI && showControls && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 backdrop-blur-sm text-white p-2 flex justify-center space-x-8 z-30">
+          <button 
+            onClick={(e) => { e.stopPropagation(); toggleAutoMode(); }}
+            className={`p-2 rounded-full ${autoMode ? 'bg-[var(--primary)]' : ''}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
+            className="p-2 rounded-full"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={(e) => { e.stopPropagation(); changeTypingSpeed(typingSpeed === 30 ? 10 : 30); }}
+            className="p-2 rounded-full"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </button>
+          
+          {activeScene.learningPoint && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleLearningPoint(); }}
+              className={`p-2 rounded-full ${showLearningPoint ? 'bg-[var(--primary)]' : ''}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+      
+      {/* スタイルシート用のCSS */}
+      <style jsx global>{`
+        @keyframes fade-in {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        .text-shadow {
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+      `}</style>
     </div>
   );
 }
