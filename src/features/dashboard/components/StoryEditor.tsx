@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Story, Scene, Choice, Character, LearningPoint } from '@/utils/storyModel';
+import StoryPreview from './StoryPreview';
 
 interface StoryEditorProps {
   story: Story;
@@ -15,6 +16,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
   const [activeSceneId, setActiveSceneId] = useState<string | null>(story.initialScene || null);
   const [scenesMap, setScenesMap] = useState<Record<string, Scene>>({});
   const [sceneOrder, setSceneOrder] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
 
   // ストーリーの内容が変更されたときに状態を更新
   useEffect(() => {
@@ -36,6 +40,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
     if (!activeSceneId && story.scenes.length > 0) {
       setActiveSceneId(story.initialScene || story.scenes[0].id);
     }
+    
+    // 初期状態では変更なし
+    setUnsavedChanges(false);
   }, [story, activeSceneId]);
 
   // 基本情報の更新
@@ -44,6 +51,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       [field]: value
     }));
+    setUnsavedChanges(true);
   };
 
   // メタデータの更新
@@ -55,6 +63,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
         [field]: value
       }
     }));
+    setUnsavedChanges(true);
   };
 
   // シーンの更新
@@ -76,6 +85,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: sceneOrder.map(id => updatedMap[id])
     }));
+    
+    setUnsavedChanges(true);
   };
 
   // 選択肢の更新
@@ -106,6 +117,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: sceneOrder.map(id => updatedMap[id])
     }));
+    
+    setUnsavedChanges(true);
   };
 
   // 選択肢の追加
@@ -135,6 +148,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: sceneOrder.map(id => updatedMap[id])
     }));
+    
+    setUnsavedChanges(true);
   };
 
   // 選択肢の削除
@@ -161,6 +176,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: sceneOrder.map(id => updatedMap[id])
     }));
+    
+    setUnsavedChanges(true);
   };
 
   // 学習ポイントの更新
@@ -190,6 +207,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: sceneOrder.map(id => updatedMap[id])
     }));
+    
+    setUnsavedChanges(true);
   };
 
   // 新しいシーンの追加
@@ -228,6 +247,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       ...prev,
       scenes: updatedOrder.map(id => updatedMap[id])
     }));
+    
+    // 変更を検知
+    setUnsavedChanges(true);
     
     // 新しいシーンをアクティブに
     setActiveSceneId(newId);
@@ -291,6 +313,18 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
     
     await onSave(finalStory);
   };
+
+  // filteredScenes の計算 - 検索語に基づいてシーンをフィルタリング
+  const filteredScenes = searchTerm.trim() 
+    ? sceneOrder.filter(id => {
+        const scene = scenesMap[id];
+        return (
+          id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          scene?.text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          scene?.text_en?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      })
+    : sceneOrder;
 
   // アクティブシーン
   const activeScene = activeSceneId ? scenesMap[activeSceneId] : null;
@@ -423,15 +457,34 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               {/* シーンリスト（左側） */}
               <div className="md:col-span-1 border-r border-gray-200 pr-4">
                 <div className="mb-2">
-                  <input
-                    type="text"
-                    placeholder="シーンを検索..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="シーンを検索..."
+                      className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="absolute left-3 top-2.5 text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    {searchTerm && (
+                      <button 
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        onClick={() => setSearchTerm('')}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <ul className="space-y-1 max-h-[500px] overflow-y-auto">
-                  {sceneOrder.map(id => (
+                  {filteredScenes.map(id => (
                     <li 
                       key={id}
                       className={`p-2 text-sm rounded cursor-pointer ${
@@ -760,23 +813,65 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
         )}
 
         {/* 保存ボタン */}
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-5 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary-dark)] transition-colors disabled:bg-gray-400"
-          >
-            {isSaving ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
+          <div className="flex items-center">
+            {unsavedChanges && (
+              <span className="inline-flex items-center text-sm text-amber-600 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                保存中...
+                未保存の変更があります
               </span>
-            ) : '変更を保存'}
-          </button>
+            )}
+            
+            <button
+              onClick={() => setShowPreview(true)}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              プレビュー
+            </button>
+          </div>
+          
+          <div>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="inline-flex items-center px-5 py-2 bg-[var(--primary)] text-white rounded-lg shadow-sm hover:bg-[var(--primary-dark)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  変更を保存
+                </>
+              )}
+            </button>
+          </div>
         </div>
+        
+        {/* プレビューモーダル */}
+        {showPreview && (
+          <StoryPreview 
+            story={{
+              ...editedStory,
+              scenes: sceneOrder.map(id => scenesMap[id])
+            }}
+            onClose={() => setShowPreview(false)}
+          />
+        )}
       </div>
     </div>
   );
