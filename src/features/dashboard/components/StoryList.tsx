@@ -59,7 +59,7 @@ function StoryCard({ story }) {
       
       {/* コンテンツ部分 */}
       <div className="p-4">
-        <Link href={`/dashboard/stories/${story.id}`} className="block">
+        <Link href={`/stories/${story.id}/play`} className="block">
           <h3 className="text-lg font-medium text-gray-800 hover:text-[var(--primary)] transition-colors">
             {story.title}
           </h3>

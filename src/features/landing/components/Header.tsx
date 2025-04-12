@@ -18,7 +18,7 @@ export const Header = () => {
   const navigation = [
     { name: '特徴', href: '#features' },
     { name: 'テンプレート', href: '#templates' },
-    { name: 'ギャラリー', href: '#gallery' },
+    { name: 'ストーリー', href: '/stories' },
     { name: '料金', href: '#pricing' },
   ];
 

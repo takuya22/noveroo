@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { PrimaryButton } from '../../../ui/buttons/PrimaryButton';
+import { SecondaryButton } from '../../../ui/buttons/SecondaryButton';
 
 export const CtaSection = () => {
   return (
@@ -20,13 +22,15 @@ export const CtaSection = () => {
           <p className="mx-auto mt-6 max-w-xl text-lg leading-7 text-gray-600">
             Noverooは完全無料で始められます。最新のAI技術の力で、あなたのアイデアを魅力的なノベルゲームに変えましょう。
           </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <PrimaryButton className="rounded-md px-8 py-3 text-base font-medium shadow-lg">
               無料で始める
             </PrimaryButton>
-            <a href="#demo" className="text-base font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors">
-              デモを見る <span aria-hidden="true">→</span>
-            </a>
+            <Link href="/stories">
+              <SecondaryButton className="rounded-md px-6 py-3 text-base font-medium border-[var(--primary-light)]">
+                公開ストーリーを見る
+              </SecondaryButton>
+            </Link>
           </div>
         </div>
       </div>
