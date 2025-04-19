@@ -48,7 +48,6 @@ export async function getUserStories(userId: string) {
     );
     
     const querySnapshot = await getDocs(q);
-    console.log('User stories:', querySnapshot.docs);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()

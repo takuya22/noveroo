@@ -4,6 +4,8 @@ import { createEmptyStoryData } from '@/utils/storyModel';
 import { saveStoryToFirestore } from '@/utils/firebase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getUserPoints, consumePointsForStoryGeneration } from '@/utils/pointsService';
+import { POINTS_PER_STORY } from '@/lib/stripe';
 
 /**
  * ストーリー生成APIエンドポイント
@@ -24,7 +26,33 @@ export async function POST(req: NextRequest) {
 
     // セッションからユーザー情報を取得
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id || 'anonymous';
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+
+    // ユーザーのポイント情報を取得
+    const userPoints = await getUserPoints(userId);
+    if (!userPoints) {
+      return NextResponse.json(
+        { error: 'ユーザーポイント情報が見つかりません' },
+        { status: 404 }
+      );
+    }
+
+    // ポイントが不足している場合はエラー
+    if (userPoints.totalPoints < POINTS_PER_STORY) {
+      return NextResponse.json({
+        error: 'ポイントが不足しています',
+        requiredPoints: POINTS_PER_STORY,
+        currentPoints: userPoints.totalPoints,
+        isPremium: userPoints.isPremium,
+      }, { status: 402 });
+    }
 
     let prompt;
     
@@ -98,7 +126,7 @@ export async function POST(req: NextRequest) {
       ...storyData.metadata,
       creator: {
         userId,
-        username: '',
+        username: session.user.name || '',
       },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -113,6 +141,14 @@ export async function POST(req: NextRequest) {
     try {
       storyId = await saveStoryToFirestore(userId, storyData);
       console.log(`Story saved to Firestore with ID: ${storyId}`);
+      
+      // ポイントを消費
+      if (storyId) {
+        const pointsConsumed = await consumePointsForStoryGeneration(userId, storyId);
+        if (!pointsConsumed) {
+          console.warn(`Failed to consume points for user ${userId}, but story was created`);
+        }
+      }
     } catch (error) {
       console.error('Firestore保存エラー:', error);
       // エラーが発生しても続行（保存失敗でもストーリーは返す）
@@ -123,6 +159,8 @@ export async function POST(req: NextRequest) {
       success: true,
       story: storyData,
       storyId,
+      pointsConsumed: POINTS_PER_STORY,
+      remainingPoints: userPoints.totalPoints - POINTS_PER_STORY,
     });
   } catch (error: any) {
     console.error('Story generation error:', error);

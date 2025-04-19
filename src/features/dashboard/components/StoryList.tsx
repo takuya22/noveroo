@@ -33,7 +33,7 @@ function StoryCard({ story }) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow hover:shadow-md">
       {/* カバー画像部分（画像がない場合はプレースホルダー） */}
-      <Link href={`/dashboard/stories/${story.id}`} className="block">
+      <Link href={`/stories/${story.id}`} className="block">
         <div className="h-40 bg-gray-100 relative">
           {story.thumbnailURL ? (
             <div
@@ -59,7 +59,7 @@ function StoryCard({ story }) {
       
       {/* コンテンツ部分 */}
       <div className="p-4">
-        <Link href={`/stories/${story.id}/play`} className="block">
+        <Link href={`/stories/${story.id}`} className="block">
           <h3 className="text-lg font-medium text-gray-800 hover:text-[var(--primary)] transition-colors">
             {story.title}
           </h3>

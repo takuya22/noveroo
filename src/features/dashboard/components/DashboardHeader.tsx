@@ -35,6 +35,19 @@ export default function DashboardHeader() {
             <span className="ml-2 text-xl font-bold text-gray-800">Noveroo</span>
           </Link>
 
+          {/* ナビゲーションリンク */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/dashboard" className="text-gray-700 hover:text-[var(--primary)] transition-colors font-medium">
+              ダッシュボード
+            </Link>
+            <Link href="/stories" className="text-gray-700 hover:text-[var(--primary)] transition-colors font-medium">
+              パブリックストーリー
+            </Link>
+            <Link href="/subscription" className="text-gray-700 hover:text-[var(--primary)] transition-colors font-medium">
+              サブスクリプション
+            </Link>
+          </nav>
+
           {/* プロフィールメニュー */}
           <div className="relative profile-menu-container">
             <button
@@ -71,6 +84,13 @@ export default function DashboardHeader() {
             {/* ドロップダウンメニュー */}
             {profileMenuOpen && (
               <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <Link
+                  href="/subscription"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => setProfileMenuOpen(false)}
+                >
+                  サブスクリプション
+                </Link>
                 <button
                   onClick={() => {
                     signOut();
