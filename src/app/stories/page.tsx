@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Story } from '@/utils/storyModel';
-import { Header } from '@/features/landing/components/Header';
+import Header from '@/features/common/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
 import { SecondaryButton } from '@/ui/buttons/SecondaryButton';

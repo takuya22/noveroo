@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useSession } from 'next-auth/react';
-import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
+import Header from '@/features/common/components/Header';
 import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
 
 const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
@@ -156,7 +156,7 @@ export default function CreateStory() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
+      <Header />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
@@ -266,7 +266,7 @@ export default function CreateStory() {
                           作成中...
                         </span>
                       ) : (
-                        `ストーリーを作成 (${POINTS_PER_STORY}ポイント)`
+                        `ストーリーを作成`
                       )}
                     </button>
                   </div>
@@ -293,7 +293,7 @@ export default function CreateStory() {
             <div>
               <PointsDisplay className="mb-6" />
               
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">ポイントについて</h3>
                 <div className="text-sm text-gray-600 space-y-3">
                   <p>1ストーリーの作成に{POINTS_PER_STORY}ポイントを消費します。</p>
@@ -304,7 +304,7 @@ export default function CreateStory() {
                     </Link>
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

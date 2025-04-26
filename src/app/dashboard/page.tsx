@@ -7,10 +7,10 @@ import { useStories } from '@/hooks/useStories';
 import Link from 'next/link';
 
 // コンポーネントのインポート
-import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
 import StoryList from '@/features/dashboard/components/StoryList';
 import EmptyState from '@/features/dashboard/components/EmptyState';
 import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
+import Header from '@/features/common/components/Header';
 
 export default function Dashboard() {
   const { user, loading, isAuthenticated } = useAuthContext();
@@ -49,7 +49,7 @@ export default function Dashboard() {
   // 以下は認証済みユーザー向けの表示内容
   return (
     <div className="min-h-screen bg-[#f9fafb]">
-      <DashboardHeader />
+      <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {success && sessionId && (
