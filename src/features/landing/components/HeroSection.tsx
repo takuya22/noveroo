@@ -6,9 +6,11 @@ import { SecondaryButton } from '../../../ui/buttons/SecondaryButton';
 import { PlayIcon } from '../../../ui/icons/Play';
 import { AuthModal } from '../../auth/components/AuthModal';
 import { MiniGamePreview } from './MiniGamePreview';
+import { useRouter } from "next/navigation";
 
 export const HeroSection = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const router = useRouter();
   
   return (
     <div className="relative isolate overflow-hidden bg-white">
@@ -34,7 +36,10 @@ export const HeroSection = () => {
                 無料で始める
               </PrimaryButton>
               <div className="flex items-center">
-                <SecondaryButton className="flex items-center gap-2 rounded-md px-6 py-3 text-base font-medium border-[var(--secondary)]">
+                <SecondaryButton
+                className="flex items-center gap-2 rounded-md px-6 py-3 text-base font-medium border-[var(--secondary)]"
+                onClick={() => router.push('/stories')}
+              >
                   <PlayIcon size={18} />
                   デモを見る
                 </SecondaryButton>

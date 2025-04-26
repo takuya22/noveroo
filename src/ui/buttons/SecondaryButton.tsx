@@ -22,7 +22,7 @@ export const SecondaryButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-full border border-[var(--secondary)] bg-transparent px-5 py-3 text-[var(--secondary-dark)] font-medium transition-colors hover:bg-[var(--secondary-light)] focus:outline-none focus:ring-2 focus:ring-[var(--secondary)] focus:ring-offset-2 disabled:border-gray-300 disabled:text-gray-300 disabled:cursor-not-allowed shadow-sm ${className}`}
+      className={`rounded-full border border-[var(--secondary)] bg-transparent px-5 py-3 text-[var(--secondary-dark)] font-medium transition-colors cursor-pointer hover:bg-[var(--secondary-light)] focus:outline-none focus:ring-2 focus:ring-[var(--secondary)] focus:ring-offset-2 disabled:border-gray-300 disabled:text-gray-300 disabled:cursor-not-allowed shadow-sm ${className}`}
     >
       {children}
     </button>

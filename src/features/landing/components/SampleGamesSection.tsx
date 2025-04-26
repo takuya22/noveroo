@@ -59,7 +59,7 @@ export const SampleGamesSection = () => {
   return (
     <div id="sample-games" className="py-16 sm:py-24 bg-white">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
+        <div className="mx-auto max-w-3xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-[var(--primary)]">サンプルゲーム</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl">
             様々なジャンルのシミュレーションが作れます

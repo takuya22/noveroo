@@ -59,7 +59,7 @@ export const FeaturesSection = () => {
   return (
     <div id="features" className="py-24 sm:py-32 bg-white border-t border-gray-100">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
+        <div className="mx-auto max-w-3xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-[var(--primary)]">簡単・便利・高品質</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl">
             あなたのアイデアをインタラクティブな物語に

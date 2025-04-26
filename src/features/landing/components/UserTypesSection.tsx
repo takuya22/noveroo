@@ -26,7 +26,7 @@ export const UserTypesSection = () => {
   return (
     <div id="templates" className="py-24 sm:py-32 bg-[var(--gray-50)]">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
+        <div className="mx-auto max-w-3xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-[var(--primary)]">様々な方に使われています</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-800 sm:text-4xl">
             あらゆる年代、目的に対応
