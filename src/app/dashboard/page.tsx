@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useStories } from '@/hooks/useStories';
+import Link from 'next/link';
 
 // コンポーネントのインポート
 import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
@@ -17,7 +18,7 @@ export default function Dashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // URLパラメータを確認（サブスクリプション成功後のリダイレクト）
+  // URLパラメータを確認
   const success = searchParams.get('success');
   const sessionId = searchParams.get('session_id');
 
@@ -31,9 +32,9 @@ export default function Dashboard() {
   // ローディング中の表示
   if (loading || storiesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-[#f9fafb]">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-[var(--primary)] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <div className="w-16 h-16 border-4 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">読み込み中...</p>
         </div>
       </div>
@@ -47,76 +48,95 @@ export default function Dashboard() {
 
   // 以下は認証済みユーザー向けの表示内容
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f9fafb]">
       <DashboardHeader />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {success && sessionId && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-              <p className="font-medium">サブスクリプションが正常に開始されました！ポイントが追加されました。</p>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold text-gray-800">マイストーリー</h1>
-                <button 
-                  onClick={() => router.push('/dashboard/create')}
-                  className="bg-[var(--primary)] text-white px-4 py-2 rounded-md hover:bg-[var(--primary-dark)] transition-colors"
-                >
-                  新しいストーリーを作る
-                </button>
-              </div>
-              
-              {/* ストーリーがない場合はEmptyState、ある場合はStoryListを表示 */}
-              {stories && stories.length > 0 ? <StoryList stories={stories} /> : <EmptyState />}
-            </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {success && sessionId && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+            <p className="font-medium">サブスクリプションが正常に開始されました！ポイントが追加されました。</p>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* サイドバー（デスクトップでは左側、モバイルでは上部） */}
+          <div className="lg:col-span-1 space-y-6">
+            <PointsDisplay className="" />
             
-            <div>
-              <PointsDisplay className="mb-6" />
-              
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">クイックリンク</h3>
-                <ul className="space-y-2">
-                  {/* サブスクリプション管理リンクを非表示に
+            {/* クイックリンクカード */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h3 className="text-md font-medium text-gray-900">クイックリンク</h3>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-3">
                   <li>
-                    <a 
-                      href="/subscription" 
-                      className="flex items-center text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors"
-                    >
-                      <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                      </svg>
-                      サブスクリプション管理
-                    </a>
-                  </li>
-                  */}
-                  <li>
-                    <a 
-                      href="/stories" 
-                      className="flex items-center text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors"
-                    >
-                      <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-                      </svg>
-                      パブリックストーリー
-                    </a>
+                    <Link href="/stories" className="group flex items-center text-gray-600 hover:text-[#34a853] transition-colors">
+                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[#f0f9f2] text-[#34a853] group-hover:bg-[#34a853] group-hover:text-white transition-colors mr-3">
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="font-medium">パブリックストーリー</span>
+                    </Link>
                   </li>
                   <li>
-                    <a 
-                      href="/dashboard/create" 
-                      className="flex items-center text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors"
-                    >
-                      <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 00-1 1v5H4a1 1 0 100 2h5v5a1 1 0 102 0v-5h5a1 1 0 100-2h-5V4a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      新規ストーリー作成
-                    </a>
+                    <Link href="/dashboard/create" className="group flex items-center text-gray-600 hover:text-[#34a853] transition-colors">
+                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[#f0f9f2] text-[#34a853] group-hover:bg-[#34a853] group-hover:text-white transition-colors mr-3">
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 4V20M20 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="font-medium">新規ストーリー作成</span>
+                    </Link>
                   </li>
                 </ul>
+              </div>
+            </div>
+            
+            {/* 統計カード（オプション） */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h3 className="text-md font-medium text-gray-900">統計</h3>
+              </div>
+              <div className="p-5">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">作成したストーリー</span>
+                  <span className="font-medium text-gray-900">{stories ? stories.length : 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">公開ストーリー</span>
+                  <span className="font-medium text-gray-900">
+                    {stories ? stories.filter(story => story.metadata?.visibility === 'public').length : 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* メインコンテンツ */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h2 className="text-xl font-medium text-gray-900">マイストーリー</h2>
+                <Link
+                  href="/dashboard/create"
+                  className="inline-flex items-center px-3 py-1.5 bg-[#34a853] text-white text-sm font-medium rounded-full hover:bg-[#2d8f46] transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 4V20M20 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  新しいストーリー
+                </Link>
+              </div>
+              
+              <div className="p-6">
+                {/* ストーリーがない場合はEmptyState、ある場合はStoryListを表示 */}
+                {stories && stories.length > 0 ? (
+                  <StoryList stories={stories} />
+                ) : (
+                  <EmptyState />
+                )}
               </div>
             </div>
           </div>
