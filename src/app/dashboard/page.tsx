@@ -80,6 +80,7 @@ export default function Dashboard() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">クイックリンク</h3>
                 <ul className="space-y-2">
+                  {/* サブスクリプション管理リンクを非表示に
                   <li>
                     <a 
                       href="/subscription" 
@@ -92,6 +93,7 @@ export default function Dashboard() {
                       サブスクリプション管理
                     </a>
                   </li>
+                  */}
                   <li>
                     <a 
                       href="/stories" 

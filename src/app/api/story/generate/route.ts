@@ -5,6 +5,7 @@ import { saveStoryToFirestore } from '@/utils/firebase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getUserPoints, consumePointsForStoryGeneration } from '@/utils/pointsService';
+import { getTicketCount, consumeTicket } from '@/utils/ticketService';
 import { POINTS_PER_STORY } from '@/lib/stripe';
 
 /**
@@ -35,23 +36,19 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id;
 
-    // ユーザーのポイント情報を取得
-    const userPoints = await getUserPoints(userId);
-    if (!userPoints) {
-      return NextResponse.json(
-        { error: 'ユーザーポイント情報が見つかりません' },
-        { status: 404 }
-      );
+    // チケット情報を取得
+    const ticketCount = await getTicketCount(userId);
+    if (ticketCount <= 0) {
+      return NextResponse.json({
+        error: 'チケットが不足しています',
+        currentTickets: ticketCount,
+      }, { status: 402 });
     }
 
-    // ポイントが不足している場合はエラー
-    if (userPoints.totalPoints < POINTS_PER_STORY) {
-      return NextResponse.json({
-        error: 'ポイントが不足しています',
-        requiredPoints: POINTS_PER_STORY,
-        currentPoints: userPoints.totalPoints,
-        isPremium: userPoints.isPremium,
-      }, { status: 402 });
+    // ユーザーのポイント情報も取得（ログ用）
+    const userPoints = await getUserPoints(userId);
+    if (!userPoints) {
+      console.warn(`User points not found for user ${userId}, but continuing with ticket`);
     }
 
     let prompt;
@@ -142,11 +139,13 @@ export async function POST(req: NextRequest) {
       storyId = await saveStoryToFirestore(userId, storyData);
       console.log(`Story saved to Firestore with ID: ${storyId}`);
       
-      // ポイントを消費
+      // チケットを使用
       if (storyId) {
-        const pointsConsumed = await consumePointsForStoryGeneration(userId, storyId);
-        if (!pointsConsumed) {
-          console.warn(`Failed to consume points for user ${userId}, but story was created`);
+        try {
+          const remainingTickets = await consumeTicket(userId);
+          console.log(`Ticket used for user ${userId}, remaining tickets: ${remainingTickets}`);
+        } catch (ticketError) {
+          console.warn(`Failed to consume ticket for user ${userId}, but story was created: ${ticketError}`);
         }
       }
     } catch (error) {
@@ -154,13 +153,20 @@ export async function POST(req: NextRequest) {
       // エラーが発生しても続行（保存失敗でもストーリーは返す）
     }
 
+    // 残りのチケット数を再取得
+    const remainingTickets = await getTicketCount(userId);
+    
     // レスポンスを返す
     return NextResponse.json({
       success: true,
       story: storyData,
       storyId,
-      pointsConsumed: POINTS_PER_STORY,
-      remainingPoints: userPoints.totalPoints - POINTS_PER_STORY,
+      // ポイント情報も一応残しておく（クライアント側の互換性維持のため）
+      pointsConsumed: userPoints ? POINTS_PER_STORY : 0,
+      remainingPoints: userPoints ? userPoints.totalPoints : 0,
+      // チケット情報を追加
+      ticketUsed: true,
+      remainingTickets,
     });
   } catch (error: any) {
     console.error('Story generation error:', error);
