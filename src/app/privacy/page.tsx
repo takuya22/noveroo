@@ -41,7 +41,7 @@ export default function PrivacyPage() {
               <li>プロフィール情報（ユーザー名、プロフィール画像など）</li>
               <li>お問い合わせやサポートの際に提供される情報</li>
               <li>アンケートやフィードバックにおいて提供される情報</li>
-              <li>支払い情報（有料サービスをご利用の場合）</li>
+              <li>支払い情報（今後予定している有料サービスをご利用の場合）</li>
               <li>ユーザーが本サービスを通じて作成するコンテンツ（ストーリー、ゲーム、画像など）</li>
             </ul>
 
@@ -76,6 +76,8 @@ export default function PrivacyPage() {
               <li>マーケティング活動、広告配信（ユーザーの設定に基づく）</li>
               <li>利用状況の分析、統計データの作成</li>
               <li>不正利用の検知、防止、セキュリティの確保</li>
+              <li>ストーリー生成回数の制限管理（ベータ版期間中は1日5回まで）</li>
+              <li>有料サービス導入後の課金管理（今後予定）</li>
               <li>その他、本サービスの提供に付随する目的</li>
             </ul>
           </section>
@@ -169,51 +171,19 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">8. ユーザーの権利</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">8. 本ポリシーの変更</h2>
             <p className="mb-4">
-              ユーザーは、自己の個人情報について、以下の権利を有します。
-            </p>
-            <ul className="list-disc pl-5 mb-4">
-              <li>個人情報の開示請求</li>
-              <li>個人情報の訂正、追加または削除の請求</li>
-              <li>個人情報の利用停止または第三者への提供の停止の請求</li>
-              <li>個人情報の利用目的の通知の請求</li>
-            </ul>
-            <p className="mb-4">
-              これらの権利を行使するには、当社の指定する方法でお問い合わせください。なお、これらの請求に対応するため、本人確認を求める場合があります。
+              当社は、法令の変更や本サービスの変更等に応じて、本ポリシーを変更することがあります。
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">9. 未成年者の個人情報</h2>
-            <p className="mb-4">
-              本サービスは、13歳未満の方の利用を想定していません。当社は、13歳未満の方から意図的に個人情報を収集することはありません。13歳未満の方が個人情報を提供していることが判明した場合、当社はできる限り速やかにその情報を削除します。
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">10. 国際的なデータ転送</h2>
-            <p className="mb-4">
-              当社は、日本国内でサーバーを運営していますが、本サービスの提供のために海外に所在するサーバーやサービスを利用する場合があります。その場合、個人情報が日本国外に転送され、保管・処理されることがあります。当社は、個人情報の転送先においても、本ポリシーに準じた保護水準を確保するよう努めます。
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">11. 本ポリシーの変更</h2>
-            <p className="mb-4">
-              当社は、法令の変更や本サービスの変更等に応じて、本ポリシーを変更することがあります。重要な変更がある場合は、本サービス上または当社ウェブサイト上での告知、登録されたメールアドレスへの通知などの方法により、事前にユーザーに通知します。
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">12. お問い合わせ窓口</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">9. お問い合わせ窓口</h2>
             <p className="mb-4">
               本ポリシーに関するお問い合わせや、個人情報の開示等の請求については、下記窓口までご連絡ください。
             </p>
             <ul className="list-none pl-0 mb-4">
-              <li>お問い合わせフォーム： <a href="https://noveroo.com/contact" className="text-[var(--primary)] hover:underline">noveroo.com/contact</a></li>
-              <li>メールアドレス： privacy@noveroo.com</li>
-              <li>個人情報保護責任者： 情報セキュリティ管理部 部長</li>
+              <li>メールアドレス： king.yanagawa@gmail.com</li>
             </ul>
           </section>
         </div>

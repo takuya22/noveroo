@@ -123,8 +123,8 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">9. 有料サービス</h2>
             <ol className="list-decimal pl-5 mb-4">
-              <li>本サービスには、有料のサービスまたは機能（以下「有料サービス」といいます）が含まれる場合があります。</li>
-              <li>有料サービスの利用料金、支払方法、その他の条件については、当社が別途定めるものとします。</li>
+              <li>本サービスは現在ベータ版として提供されており、ユーザーは1日5回までストーリーを無料で生成できます。当社は将来的に本サービスの一部または全部を有料化する予定です。</li>
+              <li>有料サービス導入後の利用料金、支払方法、その他の条件については、当社が別途定めるものとします。</li>
               <li>ユーザーは、有料サービスの利用に際して、当社が指定する支払方法により、利用料金を支払うものとします。</li>
               <li>利用料金の支払いが遅延した場合、ユーザーは年14.6%の割合による遅延損害金を当社に支払うものとします。</li>
               <li>当社は、ユーザーが有料サービスの利用料金を支払わない場合、当該ユーザーの有料サービスの利用を制限または停止することができるものとします。</li>
@@ -135,14 +135,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">10. 退会およびサービスの停止</h2>
             <ol className="list-decimal pl-5 mb-4">
               <li>ユーザーは、当社の定める方法により、いつでも退会することができます。</li>
-              <li>当社は、以下の場合には、ユーザーに通知することなく、本サービスの全部または一部の提供を停止または中断することができるものとします。
-                <ul className="list-disc pl-5 mt-2">
-                  <li>本サービスに係るコンピューター・システムの点検または保守作業を定期的または緊急に行う場合</li>
-                  <li>コンピューター、通信回線等の障害、誤操作、過度なアクセスの集中、不正アクセス、ハッキング等により本サービスの運営ができなくなった場合</li>
-                  <li>地震、落雷、火災、風水害、停電、天災地変などの不可抗力により本サービスの運営ができなくなった場合</li>
-                  <li>その他、当社が停止または中断を必要と判断した場合</li>
-                </ul>
-              </li>
+              <li>当社は、ユーザーに通知することなく、本サービスの全部または一部の提供を停止または中断することができるものとします。</li>
             </ol>
           </section>
 
@@ -150,7 +143,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">11. 保証の否認および免責事項</h2>
             <ol className="list-decimal pl-5 mb-4">
               <li>当社は、本サービスに事実上または法律上の瑕疵（安全性、信頼性、正確性、完全性、有効性、特定の目的への適合性、セキュリティなどに関する欠陥、エラーやバグ、権利侵害などを含みます）がないことを保証するものではありません。</li>
-              <li>当社は、本サービスに起因してユーザーに生じたあらゆる損害について、当社の故意または重過失による場合を除き、一切の責任を負いません。</li>
+              <li>当社は、本サービスに起因してユーザーに生じたあらゆる損害について、一切の責任を負いません。</li>
               <li>当社は、ユーザーと他のユーザーまたは第三者との間において生じた取引、連絡または紛争等について一切責任を負いません。</li>
             </ol>
           </section>
@@ -203,11 +196,10 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">18. お問い合わせ窓口</h2>
             <p className="mb-4">
-              本規約に関するお問い合わせは、下記の窓口までお願いいたします。
+              本規約に関するお問い合わせは、下記のメールアドレスまでお願いいたします。
             </p>
             <ul className="list-none pl-0 mb-4">
-              <li>お問い合わせフォーム： <a href="https://noveroo.com/contact" className="text-[var(--primary)] hover:underline">noveroo.com/contact</a></li>
-              <li>メールアドレス： support@noveroo.com</li>
+              <li>メールアドレス： king.yanagawa@gmail.com</li>
             </ul>
           </section>
 
