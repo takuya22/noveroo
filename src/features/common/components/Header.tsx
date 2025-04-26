@@ -19,6 +19,7 @@ export default function Header({ isLandingPage = false }) {
   const landingNavigation = [
     { name: '特徴', href: '#features' },
     { name: 'ストーリー', href: '/stories' },
+    { name: 'ダッシュボード', href: '/dashboard' },
     // { name: '料金', href: '#pricing' },
   ];
 
