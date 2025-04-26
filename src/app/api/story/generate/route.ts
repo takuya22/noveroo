@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ストーリーを生成
-    const storyData = await generateStory(prompt, options);
+    const storyData = await generateStory(prompt, options, true);
 
     // 画像生成が有効な場合
     if (generateImages && storyData.scenes) {

@@ -7,7 +7,8 @@ import { useAuthContext } from '@/providers/AuthProvider';
 import { useSession } from 'next-auth/react';
 import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
 import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
-import { POINTS_PER_STORY } from '@/lib/stripe';
+
+const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
 
 // 作成方法の選択タブ
 const creationMethods = [

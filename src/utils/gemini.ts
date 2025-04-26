@@ -24,14 +24,77 @@ const genAI = new GoogleGenAI({
  * Gemini APIを使ってストーリーを生成する
  * @param theme ユーザーが入力したテーマ
  * @param options 生成オプション
+ * @param quizMode クイズモードかどうか
  * @returns 生成されたストーリーデータ
  */
-export async function generateStory(theme: string, options: Options = {}): Promise<Story> {
+export async function generateStory(theme: string, options: Options = {}, quizMode: boolean = true): Promise<Story> {
   // オプションのデフォルト値設定
   const { difficulty = '通常', length = '中' } = options;
   
-  // プロンプト作成
-  const prompt = `
+  // プロンプト作成（クイズモードか通常モードかで分岐）
+  let prompt;
+  
+  if (quizMode) {
+    // クイズモード用のプロンプト
+    prompt = `
+テーマ「${theme}」に基づいて学習用のシミュレーションゲームを作成してください。
+難易度: ${difficulty}
+長さ: ${length}
+
+以下の要素を必ず含めてください:
+1. タイトル
+2. 説明文（ゲームの概要と学習目標）
+3. ストーリー展開
+4. 各シーンには問題（クイズ）を含め、選択肢から正解を選ぶ形式にする
+5. 各問題には正解の選択肢と、1〜3つの不正解の選択肢を含める
+6. 各問題に関する解説を含める
+7. ストーリーは一本道で、選択肢によって分岐しない
+
+以下のJSONフォーマットで出力してください（途中で切れないように）:
+{
+  "title": "ゲームタイトル",
+  "description": "ゲームの説明と学習目標",
+  "initialScene": "scene1",
+  "isQuizMode": true,
+  "scenes": [
+    {
+      "id": "scene1",
+      "type": "scene",
+      "background": "シーンに合わせて背景のプロンプトを英語で一言で記述",
+      "characters": [
+        {"id": "キャラクターを英語で簡潔に記述。名前もあり。", "position": {"x": 50, "y": 20}}
+      ],
+      "text": "シーンのテキスト内容（日本語）（シーンの説明とキャラクターのセリフを含む、ナレーションや対話形式で、ナレーションなら（ナレーション）、キャラクターなら（キャラクター名）を先頭につける）",
+      "text_en": "シーンのテキスト内容（英語）",
+      "quiz": {
+        "question": "このシーンに関連する問題文",
+        "options": [
+          {
+            "text": "選択肢1のテキスト",
+            "isCorrect": true,
+            "explanation": "この選択肢が正解である理由または追加説明"
+          },
+          {
+            "text": "選択肢2のテキスト",
+            "isCorrect": false,
+            "explanation": "この選択肢が不正解である理由"
+          },
+          {
+            "text": "選択肢3のテキスト",
+            "isCorrect": false,
+            "explanation": "この選択肢が不正解である理由"
+          }
+        ],
+        "explanation": "問題全体に関する詳しい解説"
+      },
+      "nextScene": "scene2"
+    }
+  ]
+}
+`;
+  } else {
+    // 通常モード（分岐ストーリー）用のプロンプト
+    prompt = `
 テーマ「${theme}」に基づいて対話型のシミュレーションゲームを作成してください。
 難易度: ${difficulty}
 長さ: ${length}
@@ -43,11 +106,12 @@ export async function generateStory(theme: string, options: Options = {}): Promi
 4. 各ストーリー展開の最後以外、各シーンに必ず選択肢（2〜3つ）を含め、プレイヤーの選択によってストーリーが変化する
 5. 教育的内容を含む結末
 
-以下のJSONフォーマットで出力してください,途中で切れないようにしてください:
+以下のJSONフォーマットで出力してください（途中で切れないように）:
 {
   "title": "ゲームタイトル",
   "description": "ゲームの説明",
   "initialScene": "start",
+  "isQuizMode": false,
   "scenes": [
     {
       "id": "start",
@@ -70,8 +134,9 @@ export async function generateStory(theme: string, options: Options = {}): Promi
       ]
     }
   ]
-}
-`;
+}`;
+  }
+
 
   try {
     // ログ保存ディレクトリを作成

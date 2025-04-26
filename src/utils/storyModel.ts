@@ -21,6 +21,19 @@ export interface LearningPoint {
   content: string;
 }
 
+// Quiz関連の新しいインターフェースを追加
+export interface QuizOption {
+  text: string;
+  isCorrect: boolean;
+  explanation?: string; // 選択肢を選んだ際の解説
+}
+
+export interface Quiz {
+  question: string;
+  options: QuizOption[];
+  explanation: string; // 問題に関する総合的な解説
+}
+
 export interface Scene {
   id: string;
   type: string;
@@ -28,7 +41,9 @@ export interface Scene {
   characters?: Character[];
   text: string;
   text_en: string;
-  choices?: Choice[];
+  choices?: Choice[];     // 従来の分岐用選択肢（下位互換性のため残す）
+  quiz?: Quiz;            // 新しいクイズ機能
+  nextScene?: string;     // 次のシーンへの直接リンク（一本道ストーリー用）
   sceneImageUrl?: string;
   useGeneratedImage?: boolean;
   learningPoint?: LearningPoint;
@@ -63,6 +78,7 @@ export interface Story {
   scenes: Scene[];
   thumbnailURL?: string;
   metadata?: Metadata;
+  isQuizMode?: boolean;   // クイズモードかどうかのフラグ
 }
 
 /**
@@ -87,5 +103,6 @@ export function createEmptyStoryData(): Story {
       tags: [],
       difficulty: '通常',
     },
+    isQuizMode: false,
   };
 }

@@ -65,6 +65,16 @@ export default function StoryPlayer({
   // 選択肢の表示状態
   const [showChoices, setShowChoices] = useState<boolean>(false);
   
+  // クイズモード関連の状態
+  const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
+  const [quizResult, setQuizResult] = useState<{
+    correct: boolean;
+    explanation: string;
+  } | null>(null);
+  const [totalCorrect, setTotalCorrect] = useState<number>(0);
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  
   // アニメーション速度（ミリ秒/文字）
   const [typingSpeed, setTypingSpeed] = useState<number>(30);
   
@@ -298,7 +308,30 @@ export default function StoryPlayer({
     setShowChoices(true);
   };
   
-  // 選択肢をクリックしたときの処理
+  // クイズの選択肢をクリックしたときの処理
+  const handleQuizOptionClick = (index: number, isCorrect: boolean, explanation: string) => {
+    if (quizSubmitted) return; // 既に回答済みなら何もしない
+    
+    // 効果音再生（オプション）
+    if (sfxOn) {
+      // 選択肢クリック効果音を再生（実装済みなら使用）
+    }
+    
+    setSelectedOptionIndex(index);
+    setQuizSubmitted(true);
+    setTotalQuestions(prev => prev + 1);
+    
+    if (isCorrect) {
+      setTotalCorrect(prev => prev + 1);
+    }
+    
+    setQuizResult({
+      correct: isCorrect,
+      explanation: explanation
+    });
+  };
+  
+  // 選択肢をクリックしたときの処理（従来の分岐タイプ用）
   const handleChoiceClick = (choice: Choice) => {
     if (!activeScene) return;
     
@@ -328,13 +361,32 @@ export default function StoryPlayer({
     setCurrentSceneId(choice.nextScene);
   };
   
-  // 選択肢がないシーンで続けるときの処理
+  // 次のシーンへ進む処理
   const handleContinue = () => {
-    if (!activeScene || !activeScene.choices || activeScene.choices.length === 0) {
+    if (!activeScene) return;
+    
+    // クイズモードで、クイズ回答後の場合、次のシーンへ進む
+    if (story.isQuizMode && activeScene.nextScene && quizSubmitted) {
+      // クイズの状態をリセット
+      setQuizSubmitted(false);
+      setSelectedOptionIndex(null);
+      setQuizResult(null);
+      
+      // 履歴に追加
+      setHistory(prev => [...prev, { sceneId: activeScene.nextScene || '', choice: '次へ' }]);
+      
+      // 次のシーンへ
+      setCurrentSceneId(activeScene.nextScene);
+      return;
+    }
+    
+    // 通常モードで、選択肢がない場合（ストーリー終了）
+    if (!story.isQuizMode && (!activeScene.choices || activeScene.choices.length === 0)) {
       // ストーリー終了処理
       setPlayData(prev => ({
         ...prev,
-        endTime: Date.now()
+        endTime: Date.now(),
+        ...(story.isQuizMode && { correctAnswers: totalCorrect, totalQuestions: totalQuestions })
       }));
       
       if (onComplete) {
@@ -347,8 +399,8 @@ export default function StoryPlayer({
       return;
     }
     
-    // 選択肢が1つだけで、自動的に次へ進む場合
-    if (activeScene.choices.length === 1) {
+    // 通常モードで、選択肢が1つだけの場合、自動的に次へ進む
+    if (!story.isQuizMode && activeScene.choices && activeScene.choices.length === 1) {
       handleChoiceClick(activeScene.choices[0]);
     }
   };
@@ -804,6 +856,12 @@ export default function StoryPlayer({
         className="relative w-full h-full min-h-screen flex flex-col"
         style={getBackgroundStyle()}
       >
+        {/* クイズモードの場合、進捗状況表示 */}
+        {story.isQuizMode && (
+          <div className="absolute top-14 right-2 bg-white bg-opacity-80 px-3 py-1 rounded-full shadow text-sm text-gray-700 z-20">
+            正解率: {totalCorrect}/{totalQuestions} ({totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0}%)
+          </div>
+        )}
         {/* キャラクターが表示されるエリア（今後実装） */}
         <div className="min-h-[300px] flex items-center justify-center">
           {/* キャラクター表示エリア（将来的に実装） */}
@@ -862,8 +920,108 @@ export default function StoryPlayer({
             )}
           </div>
           
-          {/* 選択肢 */}
-          {showChoices && activeScene.choices && activeScene.choices.length > 0 && (
+          {/* クイズモードの選択肢 */}
+          {showChoices && story.isQuizMode && activeScene.quiz && (
+            <div className={`${
+              nightMode ? 'bg-gray-800' : 'bg-gray-100'
+            } p-6 transition-colors duration-300`}>
+              {/* 問題文 */}
+              <div className="mb-6">
+                <h3 className={`font-bold text-xl mb-3 ${nightMode ? 'text-white' : 'text-gray-800'}`}>
+                  {activeScene.quiz.question}
+                </h3>
+              </div>
+              
+              {/* クイズの選択肢 */}
+              <div className="space-y-3">
+                {activeScene.quiz.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      handleQuizOptionClick(index, option.isCorrect, option.explanation || ''); 
+                    }}
+                    disabled={quizSubmitted}
+                    className={`w-full text-left p-4 rounded-lg transition-all duration-200 transform ${
+                      quizSubmitted && selectedOptionIndex === index
+                        ? option.isCorrect
+                          ? 'bg-green-100 border-green-500 text-green-800'
+                          : 'bg-red-100 border-red-500 text-red-800'
+                        : quizSubmitted
+                          ? 'opacity-70'
+                          : 'hover:scale-[1.01] hover:shadow-lg'
+                    } ${
+                      nightMode 
+                        ? 'bg-gray-700 border border-gray-600 text-white' 
+                        : 'bg-white border border-gray-200 text-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <span className={`inline-block w-6 h-6 rounded-full mr-3 flex-shrink-0 ${
+                        quizSubmitted && selectedOptionIndex === index
+                          ? option.isCorrect
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white'
+                          : nightMode 
+                            ? 'bg-gray-600 text-white' 
+                            : 'bg-[var(--primary-light)] text-[var(--primary)]'
+                      } text-xs flex items-center justify-center font-bold`}>
+                        {String.fromCharCode(65 + index)} {/* A, B, C, ... */}
+                      </span>
+                      <span className={getTextSizeClass()}>{option.text}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* 結果と解説 */}
+              {quizSubmitted && quizResult && (
+                <div className={`mt-6 p-4 rounded-lg ${
+                  quizResult.correct
+                    ? nightMode ? 'bg-green-900 border border-green-700' : 'bg-green-50 border border-green-200'
+                    : nightMode ? 'bg-red-900 border border-red-700' : 'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-center mb-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                      quizResult.correct ? 'bg-green-500' : 'bg-red-500'
+                    } text-white`}>
+                      {quizResult.correct ? '✓' : '✗'}
+                    </div>
+                    <h4 className={`font-bold ${
+                      nightMode
+                        ? 'text-white'
+                        : quizResult.correct ? 'text-green-800' : 'text-red-800'
+                    }`}>
+                      {quizResult.correct ? '正解です！' : '不正解です'}
+                    </h4>
+                  </div>
+                  
+                  {quizResult.explanation && (
+                    <p className={`${nightMode ? 'text-gray-300' : 'text-gray-700'} mb-4`}>{quizResult.explanation}</p>
+                  )}
+                  
+                  <div className={`mt-4 p-3 rounded border ${
+                    nightMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                  }`}>
+                    <h5 className={`font-semibold ${nightMode ? 'text-gray-200' : 'text-gray-900'} mb-2`}>解説</h5>
+                    <p className={nightMode ? 'text-gray-300' : 'text-gray-700'}>{activeScene.quiz.explanation}</p>
+                  </div>
+                  
+                  <div className="mt-5 text-right">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleContinue(); }}
+                      className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
+                    >
+                      次へ進む
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* 通常モードの選択肢（従来のシナリオ分岐用） */}
+          {showChoices && !story.isQuizMode && activeScene.choices && activeScene.choices.length > 0 && (
             <div className={`${
               nightMode ? 'bg-gray-800' : 'bg-gray-100'
             } p-6 space-y-3 transition-colors duration-300`}>
