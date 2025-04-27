@@ -297,7 +297,7 @@ export default function StoryDetailPage() {
                       通常版をプレイ
                     </button>
                     
-                    <button 
+                    {/* <button 
                       onClick={() => router.push(`/stories/${storyId}/play?lang=en`)}
                       className="w-full flex items-center px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
@@ -305,7 +305,7 @@ export default function StoryDetailPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                       </svg>
                       英語版をプレイ
-                    </button>
+                    </button> */}
                     
                     {isOwner && (
                       <button 
