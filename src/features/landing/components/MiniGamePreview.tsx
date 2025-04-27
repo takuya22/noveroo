@@ -11,40 +11,40 @@ export const MiniGamePreview = () => {
     {
       text: "いつもと変わらない朝。学校に向かう途中、空から強い光が降り注いだ。気がつくと、そこは見知らぬ惑星だった...",
       choices: [
-        { text: "周囲を調査する", nextStep: 1 },
-        { text: "助けを呼ぶ", nextStep: 2 }
+        { text: "周囲を調査する", nextStep: 1, reset: false },
+        { text: "助けを呼ぶ", nextStep: 2, reset: false }
       ],
       background: "bg-gradient-to-b from-indigo-500 to-purple-600"
     },
     {
       text: "あたりを見回すと、奇妙な植物が生い茂っている。葉の形が地球とは明らかに違う。近くには小さな水たまりもある。",
       choices: [
-        { text: "植物を調べる", nextStep: 3 },
-        { text: "水たまりに近づく", nextStep: 4 }
+        { text: "植物を調べる", nextStep: 3, reset: false },
+        { text: "水たまりに近づく", nextStep: 4, reset: false }
       ],
       background: "bg-gradient-to-b from-green-500 to-teal-600"
     },
     {
       text: "「誰か助けて！」と叫ぶと、遠くから不思議な音が聞こえてきた。音の方向を見ると、光る物体が近づいてくる...",
       choices: [
-        { text: "隠れる", nextStep: 5 },
-        { text: "手を振る", nextStep: 6 }
+        { text: "隠れる", nextStep: 5, reset: false },
+        { text: "手を振る", nextStep: 6, reset: false }
       ],
       background: "bg-gradient-to-b from-amber-500 to-orange-600"
     },
     {
       text: "植物をよく観察すると、葉に小さな発光体があることに気づいた。これは地球の植物とは全く異なる特性だ！",
       choices: [
-        { text: "サンプルを採取する", nextStep: 7 },
-        { text: "他の場所も探索する", nextStep: 8 }
+        { text: "サンプルを採取する", nextStep: 7, reset: false },
+        { text: "他の場所も探索する", nextStep: 8, reset: false }
       ],
       background: "bg-gradient-to-b from-emerald-500 to-green-600"
     },
     {
       text: "水たまりに近づくと、水面に奇妙な模様が浮かび上がった。よく見ると、それはこの惑星の地図のようだ！",
       choices: [
-        { text: "地図を記録する", nextStep: 9 },
-        { text: "水に触れてみる", nextStep: 10 }
+        { text: "地図を記録する", nextStep: 9, reset: false },
+        { text: "水に触れてみる", nextStep: 10, reset: false }
       ],
       background: "bg-gradient-to-b from-blue-500 to-cyan-600"
     },
@@ -102,7 +102,7 @@ export const MiniGamePreview = () => {
   const currentStepData = gameSteps[currentStep];
 
   // 選択肢をクリックした時の処理
-  const handleChoiceClick = (nextStep, reset = false) => {
+  const handleChoiceClick = (nextStep: number, reset = false) => {
     if (reset) {
       // ゲームをリセット
       setTimeout(() => {

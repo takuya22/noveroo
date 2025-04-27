@@ -119,15 +119,15 @@ export default function DashboardHeader() {
                 aria-haspopup="true"
               >
                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200">
-                  {user?.photoURL ? (
+                  {user?.image ? (
                     <Image
-                      src={user.photoURL}
-                      alt={user.displayName || 'ユーザー'}
+                      src={user.image}
+                      alt={user.name || 'ユーザー'}
                       className="h-8 w-8 object-cover"
                     />
                   ) : (
                     <span className="text-sm font-semibold text-gray-600">
-                      {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
                 </div>
@@ -137,7 +137,7 @@ export default function DashboardHeader() {
               {profileMenuOpen && (
                 <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-up">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-700">{user?.displayName || 'ユーザー'}</p>
+                    <p className="text-sm font-medium text-gray-700">{user?.name || 'ユーザー'}</p>
                     <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
                   </div>
                   <div className="py-1">

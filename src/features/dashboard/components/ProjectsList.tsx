@@ -2,6 +2,15 @@
 
 import Link from 'next/link';
 
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  coverImage: string | null;
+  updatedAt: string;
+  status: 'published' | 'draft';
+}
+
 export default function ProjectsList() {
   // サンプルデータ（実際にはAPIやFirestoreから取得する）
   const projects = [
@@ -12,7 +21,7 @@ export default function ProjectsList() {
       coverImage: '/images/project1.jpg',
       updatedAt: '2023-11-10T12:00:00Z',
       status: 'published',
-    },
+    } as Project, // 型を指定
     {
       id: 'project-2',
       title: '日本史アドベンチャー',
@@ -20,7 +29,7 @@ export default function ProjectsList() {
       coverImage: '/images/project2.jpg',
       updatedAt: '2023-11-08T15:30:00Z',
       status: 'draft',
-    },
+    } as Project,
     {
       id: 'project-3',
       title: 'SFミステリー',
@@ -28,7 +37,7 @@ export default function ProjectsList() {
       coverImage: '/images/project3.jpg',
       updatedAt: '2023-11-05T09:15:00Z',
       status: 'published',
-    },
+    } as Project,
   ];
 
   return (
@@ -41,7 +50,7 @@ export default function ProjectsList() {
 }
 
 // プロジェクトカード
-function ProjectCard({ project }) {
+function ProjectCard({ project }: { project: Project }) {
   const formattedDate = new Date(project.updatedAt).toLocaleDateString('ja-JP', {
     year: 'numeric',
     month: 'short',

@@ -108,20 +108,22 @@ export const Header = () => {
                   aria-haspopup="true"
                 >
                   <div className="h-8 w-8 rounded-full bg-[var(--gray-100)] flex items-center justify-center overflow-hidden border border-gray-200">
-                    {user.photoURL ? (
+                    {user.image ? (
                       <Image 
-                        src={user.photoURL}
-                        alt={user.displayName || 'ユーザー'}
+                        src={user.image}
+                        alt={user.name || 'ユーザー'}
                         className="h-8 w-8 object-cover"
+                        width={32}
+                        height={32}
                       />
                     ) : (
                       <span className="text-sm font-medium text-gray-700">
-                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                       </span>
                     )}
                   </div>
                   <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
-                    {user.displayName || 'ユーザー'}
+                    {user.name || 'ユーザー'}
                   </span>
                   <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path 

@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { Story } from "@/utils/storyModel";
 
 /**
  * ユーザーのストーリー一覧を取得するカスタムフック
  */
 export const useStories = () => {
   const { data: session } = useSession();
-  const [stories, setStories] = useState([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

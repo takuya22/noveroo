@@ -1,8 +1,9 @@
 "use client";
 
+import { Story } from '@/utils/storyModel';
 import Link from 'next/link';
 
-export default function StoryList({ stories = [] }) {
+export default function StoryList({ stories = [] }: { stories: Story[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
       {stories.map((story) => (
@@ -13,12 +14,12 @@ export default function StoryList({ stories = [] }) {
 }
 
 // ストーリーカード
-function StoryCard({ story }) {
+function StoryCard({ story }: { story: Story }) {
   // Firestoreのタイムスタンプまたは日付文字列に対応
   const updatedAt = story.metadata?.updatedAt 
     ? new Date(
         typeof story.metadata.updatedAt === 'object' && 'toDate' in story.metadata.updatedAt 
-          ? story.metadata.updatedAt.toDate() 
+          ? story.metadata.updatedAt.toDateString()
           : story.metadata.updatedAt
       )
     : new Date();
@@ -35,7 +36,7 @@ function StoryCard({ story }) {
     : 'bg-gray-100 text-gray-500';
 
   // 説明が長すぎる場合は短縮
-  const truncateDescription = (text, maxLength = 80) => {
+  const truncateDescription = (text: string, maxLength = 80) => {
     if (!text || text.length <= maxLength) return text;
     return `${text.substring(0, maxLength).trim()}...`;
   };

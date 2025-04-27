@@ -25,7 +25,14 @@ export async function POST(req: NextRequest) {
     }
 
     // セッションからユーザー情報を取得
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as {
+      user: {
+        name: string;
+        email: string;
+        image: string;
+        id: string;
+      }
+    };
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'ログインが必要です' },
@@ -73,7 +80,7 @@ export async function POST(req: NextRequest) {
     const storyData = await generateStory(prompt, options, true);
 
     // 画像生成が有効な場合
-    if (generateImages && storyData.scenes) {
+    if (generateImages && storyData && storyData.scenes) {
       // シーン画像を生成（最初の3シーンのみ、リソース節約のため）
       const processScenes = storyData.scenes.slice(0, 3);
       
@@ -113,13 +120,13 @@ export async function POST(req: NextRequest) {
     }
 
     // サムネイルを生成（最初のシーンの画像を使用）
-    if (generateImages && storyData.scenes && storyData.scenes.length > 0 && storyData.scenes[0].sceneImageUrl) {
+    if (generateImages && storyData && storyData.scenes && storyData.scenes.length > 0 && storyData.scenes[0].sceneImageUrl) {
       storyData.thumbnailURL = storyData.scenes[0].sceneImageUrl;
     }
 
     // メタデータを設定
-    storyData.metadata = {
-      ...storyData.metadata,
+    storyData!.metadata = {
+      ...storyData!.metadata,
       creator: {
         userId,
         username: session.user.name || '',
@@ -135,7 +142,7 @@ export async function POST(req: NextRequest) {
     // Firestoreにストーリーを保存
     let storyId;
     try {
-      storyId = await saveStoryToFirestore(userId, storyData);
+      storyId = await saveStoryToFirestore(userId, storyData!);
       console.log(`Story saved to Firestore with ID: ${storyId}`);
       
       // チケットを使用

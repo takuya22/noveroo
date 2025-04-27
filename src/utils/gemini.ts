@@ -1,7 +1,7 @@
 /**
  * Google Gemini APIとの連携コード
  */
-import { Story, Options, Scene } from './storyModel';
+import { Story, Options, Scene, LearningPoint } from './storyModel';
 import fs from 'fs';
 import path from 'path';
 import { GoogleGenAI } from "@google/genai";
@@ -27,7 +27,7 @@ const genAI = new GoogleGenAI({
  * @param quizMode クイズモードかどうか
  * @returns 生成されたストーリーデータ
  */
-export async function generateStory(theme: string, options: Options = {}, quizMode: boolean = true): Promise<Story> {
+export async function generateStory(theme: string, options: Options = {}, quizMode: boolean = true): Promise<Story | void> {
   // オプションのデフォルト値設定
   const { difficulty = '通常', length = '中' } = options;
   
@@ -278,7 +278,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
   
         // シーンに学びポイントを追加
         for (const scene of allScenes) {
-          const learningPoint = supplyData.learningPoints.find(point => point.sceneId === scene.id);
+          const learningPoint = supplyData.learningPoints.find((point: LearningPoint) => point.sceneId === scene.id);
           if (learningPoint) {
             scene.learningPoint = learningPoint;
           }
@@ -289,10 +289,10 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       const mergedStoryData = {
         ...baseStoryData,
         scenes: allScenes
-      };
+      } as Story
       return mergedStoryData;
-    } catch (e) {
-      console.warn('学習ポイントの追加に失敗しました:', e.message);
+    } catch (e: unknown) {
+      console.warn('学習ポイントの追加に失敗しました:', (e as Error).message);
       // 失敗しても続行
     }
   } catch (error: unknown) {
@@ -351,8 +351,8 @@ export async function generateImage(prompt: string): Promise<string> {
     try {
       responseData = JSON.parse(responseText);
       console.log("API response received and parsed");
-    } catch (e) {
-      console.error("JSON parse error:", e.message);
+    } catch (e: unknown) {
+      console.error("JSON parse error:", (e as Error).message);
       console.error("Response text (first 100 chars):", responseText.substring(0, 100));
       throw new Error("APIレスポンスのパースに失敗しました");
     }
@@ -361,8 +361,8 @@ export async function generateImage(prompt: string): Promise<string> {
     try {
       fs.unlinkSync(requestFileName);
       fs.unlinkSync(responseFileName);
-    } catch (err) {
-      console.warn("Failed to clean up temporary files:", err.message);
+    } catch (err: unknown) {
+      console.warn("Failed to clean up temporary files:", (err as Error).message);
     }
 
     // エラーチェック

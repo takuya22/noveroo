@@ -54,7 +54,7 @@ const sampleGames = [
 
 export const SampleGamesSection = () => {
   // アクティブなゲームを管理するstate
-  const [activeGame, setActiveGame] = useState(null);
+  const [activeGame, setActiveGame] = useState<string | null>(null);
 
   return (
     <div id="sample-games" className="py-16 sm:py-24 bg-white">

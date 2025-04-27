@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 // import { authOptions } from '../../auth/[...nextauth]/route';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -8,11 +8,17 @@ import { authOptions } from '@/lib/authOptions';
 // GETリクエスト：個別のストーリーを取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const p = await params;
-  const storyId = p.id;
-  const session = await getServerSession(authOptions);
+  const storyId = (await params).id;
+  const session = await getServerSession(authOptions) as {
+    user: {
+      name: string;
+      email: string;
+      image: string;
+      id: string;
+    }
+  };
 
   // 認証チェック
   if (!session || !session.user) {
@@ -64,10 +70,17 @@ export async function GET(
 // PUTリクエスト：ストーリーを更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const storyId = params.id;
-  const session = await getServerSession(authOptions);
+  const storyId = (await params).id;
+  const session = await getServerSession(authOptions) as {
+    user: {
+      name: string;
+      email: string;
+      image: string;
+      id: string;
+    }
+  };
 
   // 認証チェック
   if (!session || !session.user) {
@@ -131,10 +144,18 @@ export async function PUT(
 
 // DELETEリクエスト：ストーリーを削除
 export async function DELETE(
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const storyId = params.id;
-  const session = await getServerSession(authOptions);
+  const storyId = (await params).id;
+  const session = await getServerSession(authOptions) as {
+    user: {
+      name: string;
+      email: string;
+      image: string;
+      id: string;
+    }
+  };
 
   // 認証チェック
   if (!session || !session.user) {

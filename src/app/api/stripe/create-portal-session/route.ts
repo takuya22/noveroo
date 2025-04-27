@@ -7,7 +7,14 @@ import { authOptions } from '@/lib/authOptions';
 export async function POST(req: NextRequest) {
   try {
     // セッションからユーザー情報を取得
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as {
+      user: {
+        name: string;
+        email: string;
+        image: string;
+        id: string;
+      }
+    };
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

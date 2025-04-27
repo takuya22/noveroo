@@ -19,11 +19,11 @@ export const loginWithGoogle = async () => {
       success: true,
       redirectUrl: result.url,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Login error:', error);
     return {
       success: false,
-      error: error.message || 'ログインに失敗しました',
+      error: (error as Error).message || 'ログインに失敗しました',
     };
   }
 };
@@ -39,11 +39,11 @@ export const logout = async () => {
     
     // ログアウト成功
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Logout error:', error);
     return {
       success: false,
-      error: error.message || 'ログアウトに失敗しました',
+      error: (error as Error).message || 'ログアウトに失敗しました',
     };
   }
 };

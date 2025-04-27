@@ -14,7 +14,14 @@ export async function GET(req: NextRequest) {
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
     
     // セッションからユーザー情報を取得
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as {
+      user: {
+        name: string;
+        email: string;
+        image: string;
+        id: string;
+      }
+    };
     const userId = session?.user?.id;
     
     let stories;

@@ -236,8 +236,7 @@ export default function StoryPlayer({
             if (sfxOn && i % 5 === 0) {
               playTypingSfx();
             }
-            
-            timeout = setTimeout(typeText, typingSpeed);
+            setTimeout(typeText, typingSpeed);
           } else {
             setIsTyping(false);
             setTextComplete(true);
@@ -260,8 +259,8 @@ export default function StoryPlayer({
     
     // クリーンアップ
     return () => {
-      let timeout: NodeJS.Timeout;
-      clearTimeout(timeout);
+      // let timeout: NodeJS.Timeout;
+      // clearTimeout(timeout);
     };
   }, [currentSceneId, language, autoMode, typingSpeed, sfxOn]);
   

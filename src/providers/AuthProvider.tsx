@@ -10,6 +10,7 @@ interface AuthContextType {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    uid?: string | null;
   } | null;
   loading: boolean;
   error: string | null;
