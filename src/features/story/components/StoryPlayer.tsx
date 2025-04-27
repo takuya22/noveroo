@@ -35,7 +35,7 @@ interface StoryPlayerProps {
   story: Story;
   onClose?: () => void;
   standalone?: boolean; // スタンドアロンモードかどうか
-  onComplete?: (results: any) => void; // 完了時のコールバック
+  onComplete?: (results: unknown) => void; // 完了時のコールバック
   language?: 'ja' | 'en'; // 言語設定
 }
 

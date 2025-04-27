@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Story, Scene, Choice, LearningPoint } from '@/utils/storyModel';
 import StoryPreview from './StoryPreview';
+import Image from 'next/image';
 
 interface StoryEditorProps {
   story: Story;
@@ -46,7 +47,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
   }, [story, activeSceneId]);
 
   // 基本情報の更新
-  const updateBasicInfo = (field: keyof Story, value: any) => {
+  const updateBasicInfo = (field: keyof Story, value: string) => {
     setEditedStory(prev => ({
       ...prev,
       [field]: value
@@ -55,19 +56,19 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
   };
 
   // メタデータの更新
-  const updateMetadata = (field: string, value: any) => {
+  const updateMetadata = (field: string, value: string | Array<string>) => {
     setEditedStory(prev => ({
       ...prev,
       metadata: {
         ...prev.metadata,
         [field]: value
       }
-    }));
+    } as Story));
     setUnsavedChanges(true);
   };
 
   // シーンの更新
-  const updateScene = (sceneId: string, field: keyof Scene, value: any) => {
+  const updateScene = (sceneId: string, field: keyof Scene, value: string) => {
     const updatedScene = {
       ...scenesMap[sceneId],
       [field]: value
@@ -270,7 +271,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
     }
     
     // シーンマップから削除
-    const { [sceneId]: _, ...updatedMap } = scenesMap;
+    const { [sceneId]: _, ...updatedMap } = scenesMap; // eslint-disable-line @typescript-eslint/no-unused-vars
     
     // シーン順序も更新
     const updatedOrder = sceneOrder.filter(id => id !== sceneId);
@@ -429,10 +430,12 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               {editedStory.thumbnailURL && (
                 <div className="mt-2 p-2 border border-gray-200 rounded">
                   <p className="text-xs text-gray-500 mb-1">プレビュー:</p>
-                  <img 
+                  <Image 
                     src={editedStory.thumbnailURL} 
                     alt="サムネイルプレビュー" 
                     className="h-24 object-cover rounded"
+                    width={500}
+                    height={500}
                   />
                 </div>
               )}

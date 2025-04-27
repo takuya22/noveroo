@@ -242,6 +242,8 @@ export default function StoryDetailPage() {
                       src={story.thumbnailURL} 
                       alt={`${story.title}のプレビュー`} 
                       className="w-full object-cover h-64"
+                      width={500}
+                      height={500}
                     />
                   </div>
                 </div>

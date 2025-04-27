@@ -7,12 +7,13 @@ import Header from '@/features/common/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
 import Image from 'next/image';
+import { Story } from '@/utils/storyModel';
 
 export default function StoriesPage() {
   const router = useRouter();
   
   const [loading, setLoading] = useState<boolean>(true);
-  const [stories, setStories] = useState<Array<any>>([]);
+  const [stories, setStories] = useState<Array<Story>>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [visibleStories, setVisibleStories] = useState<number>(12);
@@ -169,7 +170,7 @@ export default function StoriesPage() {
           {!loading && !error && filteredStories.length > 0 && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredStories.slice(0, visibleStories).map((story: any) => (
+                {filteredStories.slice(0, visibleStories).map((story: Story) => (
                   <div 
                     key={story.id} 
                     className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 flex flex-col"
@@ -182,6 +183,8 @@ export default function StoriesPage() {
                           src={story.thumbnailURL}
                           alt={`${story.title}のサムネイル`}
                           className="w-full h-full object-cover"
+                          width={500}
+                          height={500}
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full bg-gradient-to-r from-[var(--primary-light)] to-[var(--secondary-light)]">

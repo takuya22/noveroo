@@ -72,6 +72,7 @@ export interface Metadata {
 }
 
 export interface Story {
+  id?: string;
   title: string;
   description: string;
   initialScene: string;

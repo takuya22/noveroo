@@ -41,11 +41,11 @@ export const useAuth = () => {
     try {
       await signOut({ callbackUrl: "/" });
       return { success: true };
-    } catch (error: any) {
-      setError(error.message || "ログアウトに失敗しました");
+    } catch (error: unknown) {
+      setError((error as Error).message || "ログアウトに失敗しました");
       return {
         success: false,
-        error: error.message || "ログアウトに失敗しました",
+        error: (error as Error).message || "ログアウトに失敗しました",
       };
     }
   };

@@ -2,17 +2,20 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { AuthResult } from '@/features/auth/types/AuthModel';
 
 // 認証コンテキストの型定義
-export interface AuthContextType {
-  user: any | null;
+interface AuthContextType {
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
   loading: boolean;
   error: string | null;
-  signInWithGoogle: () => Promise<any>;
-  signOut: () => Promise<any>;
+  signInWithGoogle: () => Promise<AuthResult>;
+  signOut: () => Promise<AuthResult>;
   isAuthenticated: boolean;
-  refreshStories: () => Promise<void>;
-  storiesLoading: boolean;
 }
 
 // 認証コンテキストの作成（デフォルト値はnullで初期化）
@@ -23,9 +26,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// 認証プロバイダーコンポーネント - NextAuthと統合
+// 認証プロバイダーコンポーネント
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // useAuthは新しいNextAuth対応のフックを使用
   const auth = useAuth();
 
   return (
