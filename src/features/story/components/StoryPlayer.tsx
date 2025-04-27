@@ -217,6 +217,7 @@ export default function StoryPlayer({
       }
       
       // テキストアニメーション開始
+      // let timeout: NodeJS.Timeout;
       const startTextAnimation = () => {
         // 全テキストを連結
         const fullText = segments.map(segment => segment.text).join('');
@@ -235,7 +236,7 @@ export default function StoryPlayer({
             if (sfxOn && i % 5 === 0) {
               playTypingSfx();
             }
-            let timeout: NodeJS.Timeout;
+            
             timeout = setTimeout(typeText, typingSpeed);
           } else {
             setIsTyping(false);
