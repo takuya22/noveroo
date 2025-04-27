@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useStories } from '@/hooks/useStories';
@@ -13,7 +13,8 @@ import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
 import Header from '@/features/common/components/Header';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 
-export default function Dashboard() {
+// SearchParamsを使用する部分を別コンポーネントに分離
+function DashboardContent() {
   const { loading, isAuthenticated } = useAuthContext();
   const { stories, loading: storiesLoading } = useStories();
   const router = useRouter();
@@ -157,5 +158,21 @@ export default function Dashboard() {
         </main>
       )}
     </div>
+  );
+}
+
+// メインコンポーネント
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-[#f9fafb]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
