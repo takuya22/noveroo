@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, PREMIUM_POINTS_PER_MONTH } from '@/lib/stripe';
 import { updateUserPoints, updateUserSubscription } from '@/utils/pointsService';
+import Stripe from 'stripe';
+import { UserPoints } from '@/utils/pointsModel';
 
 // Stripeからのwebhookをハンドリング
 export async function POST(req: NextRequest) {
@@ -21,9 +23,9 @@ export async function POST(req: NextRequest) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err: any) {
-    console.log(`Webhook signature verification failed: ${err.message}`);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    console.log(`Webhook signature verification failed: ${(err as Error).message}`);
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
   }
 
   // イベントタイプに応じた処理
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
 
       // サブスクリプションのステータス変更時（キャンセルなど）
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object);
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
 
       // サブスクリプション削除時
@@ -55,24 +57,24 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (error: any) {
-    console.error(`Error handling webhook event: ${error.message}`);
+  } catch (error: unknown) {
+    console.error(`Error handling webhook event: ${(error as Error).message}`);
     return NextResponse.json(
-      { error: error.message || 'Failed to process webhook' },
+      { error: (error as Error).message || 'Failed to process webhook' },
       { status: 500 }
     );
   }
 }
 
 // サブスクリプション作成時の処理
-async function handleSubscriptionCreated(subscription: any) {
+async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer;
   const status = subscription.status;
   const subscriptionId = subscription.id;
 
   // カスタマーのメタデータからユーザーIDを取得
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = customer.metadata?.userId;
+  const customer = await stripe.customers.retrieve(customerId as string);
+  const userId = (customer as Stripe.Customer).metadata?.userId;
 
   if (!userId) {
     console.error(`No userId found in customer metadata: ${customerId}`);
@@ -82,8 +84,8 @@ async function handleSubscriptionCreated(subscription: any) {
   // ユーザーの課金情報を更新
   await updateUserSubscription(
     userId,
-    status as any,
-    customerId,
+    status as UserPoints['subscriptionStatus'],
+    customerId as string,
     subscriptionId
   );
 
@@ -99,13 +101,12 @@ async function handleSubscriptionCreated(subscription: any) {
 }
 
 // サブスクリプション更新時の処理（毎月の課金）
-async function handleSubscriptionRenewed(invoice: any) {
+async function handleSubscriptionRenewed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer;
-  const subscriptionId = invoice.subscription;
 
   // カスタマーのメタデータからユーザーIDを取得
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = customer.metadata?.userId;
+  const customer = await stripe.customers.retrieve(customerId as string);
+  const userId = (customer as Stripe.Customer).metadata?.userId;
 
   if (!userId) {
     console.error(`No userId found in customer metadata: ${customerId}`);
@@ -122,14 +123,14 @@ async function handleSubscriptionRenewed(invoice: any) {
 }
 
 // サブスクリプションのステータス変更時の処理
-async function handleSubscriptionUpdated(subscription: any) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer;
   const status = subscription.status;
   const subscriptionId = subscription.id;
 
   // カスタマーのメタデータからユーザーIDを取得
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = customer.metadata?.userId;
+  const customer = await stripe.customers.retrieve(customerId as string);
+  const userId = (customer as Stripe.Customer).metadata?.userId;
 
   if (!userId) {
     console.error(`No userId found in customer metadata: ${customerId}`);
@@ -139,19 +140,19 @@ async function handleSubscriptionUpdated(subscription: any) {
   // ユーザーの課金情報を更新
   await updateUserSubscription(
     userId,
-    status as any,
-    customerId,
+    status as UserPoints['subscriptionStatus'],
+    customerId as string,
     subscriptionId
   );
 }
 
 // サブスクリプション削除時の処理
-async function handleSubscriptionDeleted(subscription: any) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer;
 
   // カスタマーのメタデータからユーザーIDを取得
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = customer.metadata?.userId;
+  const customer = await stripe.customers.retrieve(customerId as string);
+  const userId = (customer as Stripe.Customer).metadata?.userId;
 
   if (!userId) {
     console.error(`No userId found in customer metadata: ${customerId}`);
@@ -161,7 +162,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   // ユーザーの課金情報を更新
   await updateUserSubscription(
     userId,
-    'canceled' as any,
-    customerId
+    'canceled' as UserPoints['subscriptionStatus'],
+    customerId as string
   );
 }

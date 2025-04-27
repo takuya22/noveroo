@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { AuthModal, AuthMode } from '@/features/auth/components/AuthModal';
+import Image from 'next/image';
 
 export default function Header({ isLandingPage = false }) {
   const { user, loading, signOut } = useAuthContext();
@@ -12,7 +13,6 @@ export default function Header({ isLandingPage = false }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
-  const router = useRouter();
   const pathname = usePathname();
 
   // ランディングページ用のナビゲーションリンク
@@ -129,7 +129,7 @@ export default function Header({ isLandingPage = false }) {
                 >
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200">
                     {user?.photoURL ? (
-                      <img
+                      <Image
                         src={user.photoURL}
                         alt={user.displayName || 'ユーザー'}
                         className="h-8 w-8 object-cover"

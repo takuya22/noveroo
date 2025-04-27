@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+// import { authOptions } from '../../auth/[...nextauth]/route';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { authOptions } from '@/lib/authOptions';
 
 // GETリクエスト：個別のストーリーを取得
 export async function GET(
@@ -51,7 +52,7 @@ export async function GET(
       id: storyId,
       ...storyData
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching story:', error);
     return NextResponse.json(
       { error: 'ストーリーの取得中にエラーが発生しました' },
@@ -119,7 +120,7 @@ export async function PUT(
       id: storyId,
       ...updateData
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating story:', error);
     return NextResponse.json(
       { error: 'ストーリーの更新中にエラーが発生しました' },
@@ -130,7 +131,6 @@ export async function PUT(
 
 // DELETEリクエスト：ストーリーを削除
 export async function DELETE(
-  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const storyId = params.id;
@@ -174,7 +174,7 @@ export async function DELETE(
 
     // 成功レスポンスを返す
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting story:', error);
     return NextResponse.json(
       { error: 'ストーリーの削除中にエラーが発生しました' },

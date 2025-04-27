@@ -36,9 +36,9 @@ export default function PlayStoryPage() {
         
         const data = await response.json();
         setStory(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching story:', err);
-        setError(err.message || 'ストーリーの読み込みに失敗しました');
+        setError((err as Error).message || 'ストーリーの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
@@ -48,8 +48,8 @@ export default function PlayStoryPage() {
   }, [storyId]);
   
   // 再生完了時の処理
-  const handlePlayComplete = (results: any) => {
-    console.log('Play completed with results:', results);
+  const handlePlayComplete = (results: unknown) => {
+    console.log('Play completed with results:', (results as string).toString());
     // 必要に応じて統計データを送信するなどの処理を追加
   };
   

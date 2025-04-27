@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { stripe, SUBSCRIPTION_PRICE_ID } from '@/lib/stripe';
 import { getUserPoints } from '@/utils/pointsService';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { authOptions } from '@/lib/authOptions';
 
 export async function POST() {
   try {
@@ -58,10 +58,10 @@ export async function POST() {
     });
 
     return NextResponse.json({ checkoutUrl: checkoutSession.url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { error: (error as Error).message || 'Failed to create checkout session' },
       { status: 500 }
     );
   }

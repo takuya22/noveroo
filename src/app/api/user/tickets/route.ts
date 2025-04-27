@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getUserTickets, checkAndRefillTickets } from '@/utils/ticketService';
+import { checkAndRefillTickets } from '@/utils/ticketService';
+import { authOptions } from '@/lib/authOptions';
 
 /**
  * ユーザーのチケット情報を取得するAPIエンドポイント
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // セッションからユーザー情報を取得
     const session = await getServerSession(authOptions);
@@ -27,10 +27,10 @@ export async function GET(req: NextRequest) {
       remainingCount: ticketInfo.remainingCount,
       lastRefillDate: ticketInfo.lastRefillDate,
     });
-  } catch (error: any) {
-    console.error('Error getting ticket info:', error);
+  } catch (error: unknown) {
+    console.error('Error getting ticket info:', (error as Error).message);
     return NextResponse.json(
-      { error: error.message || 'チケット情報の取得に失敗しました' },
+      { error: (error as Error).message || 'チケット情報の取得に失敗しました' },
       { status: 500 }
     );
   }

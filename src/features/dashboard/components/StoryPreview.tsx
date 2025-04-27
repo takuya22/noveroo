@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Story, Scene, Choice } from '@/utils/storyModel';
+import Image from 'next/image';
 
 interface StoryPreviewProps {
   story: Story;
@@ -122,7 +123,7 @@ export default function StoryPreview({ story, onClose }: StoryPreviewProps) {
           {/* シーン画像部分 */}
           <div className="relative h-64 bg-gray-800">
             {currentScene.sceneImageUrl ? (
-              <img 
+              <Image
                 src={currentScene.sceneImageUrl} 
                 alt={currentScene.background} 
                 className="w-full h-full object-cover"

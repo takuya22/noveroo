@@ -3,16 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Story } from '@/utils/storyModel';
 import Header from '@/features/common/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
-import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
-import { useAuthContext } from '@/providers/AuthProvider';
 
 export default function StoriesPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthContext();
   
   const [loading, setLoading] = useState<boolean>(true);
   const [stories, setStories] = useState<Array<any>>([]);
@@ -47,9 +43,9 @@ export default function StoriesPage() {
         
         const data = await response.json();
         setStories(data.stories || []);
-      } catch (err: any) {
-        console.error('Error fetching stories:', err);
-        setError(err.message || 'ストーリー一覧の読み込みに失敗しました');
+      } catch (err: unknown) {
+        console.error('Error fetching stories:', (err as Error).message);
+        setError((err as Error).message || 'ストーリー一覧の読み込みに失敗しました');
       } finally {
         setLoading(false);
       }

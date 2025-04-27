@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
-const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
+// const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
 
 type PointsDisplayProps = {
   className?: string;
@@ -12,7 +11,7 @@ type PointsDisplayProps = {
 
 export default function PointsDisplay({ className = '' }: PointsDisplayProps) {
   const { data: session, status } = useSession();
-  const [pointsData, setPointsData] = useState({
+  const [, setPointsData] = useState({
     totalPoints: 0,
     isPremium: false,
     subscriptionStatus: 'none',

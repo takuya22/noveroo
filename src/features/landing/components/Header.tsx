@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PrimaryButton } from '../../../ui/buttons/PrimaryButton';
-import { SecondaryButton } from '../../../ui/buttons/SecondaryButton';
 import { AuthModal, AuthMode } from '../../auth/components/AuthModal';
 import { useAuthContext } from '../../../providers/AuthProvider';
 
@@ -110,7 +109,7 @@ export const Header = () => {
                 >
                   <div className="h-8 w-8 rounded-full bg-[var(--gray-100)] flex items-center justify-center overflow-hidden border border-gray-200">
                     {user.photoURL ? (
-                      <img 
+                      <Image 
                         src={user.photoURL}
                         alt={user.displayName || 'ユーザー'}
                         className="h-8 w-8 object-cover"

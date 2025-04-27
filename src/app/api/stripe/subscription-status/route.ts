@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getUserPoints } from '@/utils/pointsService';
+import { authOptions } from '@/lib/authOptions';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // セッションからユーザー情報を取得
     const session = await getServerSession(authOptions);
@@ -28,10 +28,10 @@ export async function GET(req: NextRequest) {
       stripeCustomerId: userPoints.stripeCustomerId || null,
       stripeSubscriptionId: userPoints.stripeSubscriptionId || null,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching subscription status:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch subscription status' },
+      { error: (error as Error).message || 'Failed to fetch subscription status' },
       { status: 500 }
     );
   }

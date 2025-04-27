@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useAuth } from "./useAuth";
 
 /**
  * ユーザーのストーリー一覧を取得するカスタムフック
@@ -11,7 +10,7 @@ export const useStories = () => {
   const { data: session } = useSession();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   // ストーリー一覧を取得する関数
   const fetchStories = async () => {
@@ -22,7 +21,7 @@ export const useStories = () => {
 
     try {
       setLoading(true);
-      setError(null);
+      setError('');
 
       const response = await fetch("/api/stories?type=user");
       
@@ -33,9 +32,9 @@ export const useStories = () => {
 
       const data = await response.json();
       setStories(data.stories || []);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error fetching stories:", err);
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }

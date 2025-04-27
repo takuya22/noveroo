@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
@@ -14,10 +14,10 @@ if (!getApps().length) {
   });
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // セッションクッキーからトークンを取得
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
     
     if (!sessionCookie) {
@@ -41,15 +41,20 @@ export async function GET(req: NextRequest) {
       displayName: user.displayName,
       photoURL: user.photoURL,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User info error:', error);
     
     // セッションクッキーを削除
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.delete('session');
-    
+
+    // error が Error インスタンスかどうかチェック
+    const errorMessage = error instanceof Error
+      ? error.message
+      : '認証情報の取得に失敗しました';
+
     return NextResponse.json(
-      { error: error.message || '認証情報の取得に失敗しました' },
+      { error: errorMessage },
       { status: 401 }
     );
   }

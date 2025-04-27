@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Story, Scene, Choice } from '@/utils/storyModel';
-import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
-import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
 
 // テキスト内の話者情報と対応するテキストを解析する関数
 const parseTextWithSpeakers = (text: string) => {

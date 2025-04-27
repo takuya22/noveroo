@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStory, generateImage } from '@/utils/gemini';
-import { createEmptyStoryData } from '@/utils/storyModel';
 import { saveStoryToFirestore } from '@/utils/firebase';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getUserPoints, consumePointsForStoryGeneration } from '@/utils/pointsService';
+import { getUserPoints } from '@/utils/pointsService';
 import { getTicketCount, consumeTicket } from '@/utils/ticketService';
 import { POINTS_PER_STORY } from '@/lib/stripe';
+import { authOptions } from '@/lib/authOptions';
 
 /**
  * ストーリー生成APIエンドポイント
@@ -168,10 +167,10 @@ export async function POST(req: NextRequest) {
       ticketUsed: true,
       remainingTickets,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Story generation error:', error);
     return NextResponse.json(
-      { error: error.message || 'ストーリー生成中にエラーが発生しました' },
+      { error: (error as Error).message || 'ストーリー生成中にエラーが発生しました' },
       { status: 500 }
     );
   }

@@ -20,12 +20,12 @@ const creationMethods = [
 
 export default function CreateStory() {
   const { data: session, status } = useSession();
-  const { user, loading, isAuthenticated } = useAuthContext();
+  const { loading, isAuthenticated } = useAuthContext();
   const router = useRouter();
   const [activeMethod, setActiveMethod] = useState('theme');
   const [inputText, setInputText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pointsData, setPointsData] = useState({
     totalPoints: 0,
@@ -87,7 +87,7 @@ export default function CreateStory() {
   };
 
   // ストーリー作成処理
-  const handleCreateStory = async (e) => {
+  const handleCreateStory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!inputText.trim()) {
@@ -102,7 +102,7 @@ export default function CreateStory() {
     }
     
     setIsCreating(true);
-    setError(null);
+    setError('');
     
     try {
       // APIを呼び出してストーリーを生成
@@ -134,13 +134,13 @@ export default function CreateStory() {
         throw new Error(errorData.error || 'ストーリー生成に失敗しました');
       }
       
-      const data = await response.json();
+      // const data = await response.json();
       
       // 成功したら詳細ページへ（現在はダッシュボードに戻る）
       router.push('/dashboard');
     } catch (err) {
-      console.error('Story creation error:', err);
-      setError(err.message || 'ストーリーの作成中にエラーが発生しました。もう一度お試しください。');
+      console.error('Story creation error:', (err as Error).message);
+      setError((err as Error).message || 'ストーリーの作成中にエラーが発生しました。もう一度お試しください。');
     } finally {
       setIsCreating(false);
     }

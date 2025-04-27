@@ -28,9 +28,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await signInWithGoogle();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Google Auth error:', err);
-      setError(err.message || 'Google認証に失敗しました');
+      setError((err as Error).message || 'Google認証に失敗しました');
     } finally {
       setLoading(false);
     }

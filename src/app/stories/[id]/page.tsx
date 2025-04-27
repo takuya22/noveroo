@@ -256,7 +256,7 @@ export default function StoryDetailPage() {
                   <div className="text-gray-500">作成日</div>
                   <div className="text-gray-700">
                     {story.metadata?.createdAt 
-                      ? new Date(story.metadata.createdAt as any).toLocaleDateString('ja-JP')
+                      ? new Date(story.metadata.createdAt as Date).toLocaleDateString('ja-JP')
                       : '不明'
                     }
                   </div>
@@ -264,7 +264,7 @@ export default function StoryDetailPage() {
                   <div className="text-gray-500">最終更新</div>
                   <div className="text-gray-700">
                     {story.metadata?.updatedAt 
-                      ? new Date(story.metadata.updatedAt as any).toLocaleDateString('ja-JP')
+                      ? new Date(story.metadata.updatedAt as Date).toLocaleDateString('ja-JP')
                       : '不明'
                     }
                   </div>
@@ -348,7 +348,7 @@ export default function StoryDetailPage() {
                   
                   <p className="text-sm text-gray-600 mb-4">
                     このストーリーは{story.metadata?.createdAt 
-                      ? new Date(story.metadata.createdAt as any).toLocaleDateString('ja-JP')
+                      ? new Date(story.metadata.createdAt as Date).toLocaleDateString('ja-JP')
                       : '不明の日付'}に作成されました。
                   </p>
                   

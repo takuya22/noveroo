@@ -1,21 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
-import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
 // import { PREMIUM_POINTS_PER_MONTH, POINTS_PER_STORY } from '@/lib/stripe';
 
-const PREMIUM_POINTS_PER_MONTH = 2000; // プレミアムプランの月間ポイント数
+// const PREMIUM_POINTS_PER_MONTH = 2000; // プレミアムプランの月間ポイント数
 const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const [loading, setLoading] = useState(false);
-  const [subscriptionData, setSubscriptionData] = useState({
+  // const [, setLoading] = useState(false);
+  const [, setSubscriptionData] = useState({
     isPremium: false,
     subscriptionStatus: 'none',
     totalPoints: 0,
@@ -25,9 +24,9 @@ export default function SubscriptionPage() {
   });
 
   // URLパラメータを確認
-  const success = searchParams.get('success');
-  const canceled = searchParams.get('canceled');
-  const sessionId = searchParams.get('session_id');
+  // const success = searchParams.get('success');
+  // const canceled = searchParams.get('canceled');
+  // const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -53,73 +52,73 @@ export default function SubscriptionPage() {
     }
   };
 
-  const handleSubscribe = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          returnUrl: `${window.location.origin}/subscription`,
-        }),
-      });
+  // const handleSubscribe = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch('/api/stripe/create-checkout-session', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         returnUrl: `${window.location.origin}/subscription`,
+  //       }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
       
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (data.checkoutUrl) {
+  //       window.location.href = data.checkoutUrl;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error creating checkout session:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleManageSubscription = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/stripe/create-portal-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          returnUrl: `${window.location.origin}/subscription`,
-        }),
-      });
+  // const handleManageSubscription = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch('/api/stripe/create-portal-session', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         returnUrl: `${window.location.origin}/subscription`,
+  //       }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
       
-      if (data.portalUrl) {
-        window.location.href = data.portalUrl;
-      }
-    } catch (error) {
-      console.error('Error creating portal session:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (data.portalUrl) {
+  //       window.location.href = data.portalUrl;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error creating portal session:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // 最終ポイント追加日をフォーマット
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'なし';
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('ja-JP');
-  };
+  // const formatDate = (timestamp: any) => {
+  //   if (!timestamp) return 'なし';
+  //   const date = new Date(timestamp);
+  //   return date.toLocaleDateString('ja-JP');
+  // };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-[var(--primary)] border-gray-200 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (status === 'loading') {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="w-12 h-12 border-4 border-t-[var(--primary)] border-gray-200 rounded-full animate-spin mx-auto"></div>
+  //         <p className="mt-4 text-gray-600">読み込み中...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 pb-20">

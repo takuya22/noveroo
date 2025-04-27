@@ -5,10 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
 import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
 import StoryEditor from '@/features/dashboard/components/StoryEditor';
-import { Story, Scene } from '@/utils/storyModel';
+import { Story } from '@/utils/storyModel';
 
 export default function EditStory() {
-  const { user, loading, isAuthenticated } = useAuthContext();
+  const { loading, isAuthenticated } = useAuthContext();
   const router = useRouter();
   const params = useParams();
   const storyId = params.id as string;
@@ -44,9 +44,9 @@ export default function EditStory() {
         
         const data = await response.json();
         setStoryData(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching story:', err);
-        setError('ストーリーの読み込み中にエラーが発生しました: ' + err.message);
+        setError('ストーリーの読み込み中にエラーが発生しました: ' + (err as Error).message);
       } finally {
         setIsLoading(false);
       }
@@ -84,9 +84,9 @@ export default function EditStory() {
       setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving story:', err);
-      setError('保存中にエラーが発生しました: ' + err.message);
+      setError('保存中にエラーが発生しました: ' + (err as Error).message);
     } finally {
       setIsSaving(false);
     }

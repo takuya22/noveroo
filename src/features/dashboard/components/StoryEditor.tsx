@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Story, Scene, Choice, Character, LearningPoint } from '@/utils/storyModel';
+import { Story, Scene, Choice, LearningPoint } from '@/utils/storyModel';
 import StoryPreview from './StoryPreview';
 
 interface StoryEditorProps {

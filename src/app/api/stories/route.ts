@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getPublicStories, getUserStories } from '@/utils/storyService';
+import { authOptions } from '@/lib/authOptions';
 
 /**
  * ストーリー一覧を取得するAPIエンドポイント
@@ -38,10 +38,10 @@ export async function GET(req: NextRequest) {
       success: true,
       stories
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Stories fetch error:', error);
     return NextResponse.json(
-      { error: error.message || 'ストーリー一覧の取得中にエラーが発生しました' },
+      { error: (error as Error).message || 'ストーリー一覧の取得中にエラーが発生しました' },
       { status: 500 }
     );
   }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { stripe } from '@/lib/stripe';
 import { getUserPoints } from '@/utils/pointsService';
+import { authOptions } from '@/lib/authOptions';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,10 +33,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ portalUrl: portalSession.url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating portal session:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create portal session' },
+      { error: (error as Error).message || 'Failed to create portal session' },
       { status: 500 }
     );
   }
