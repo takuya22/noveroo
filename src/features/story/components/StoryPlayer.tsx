@@ -217,8 +217,8 @@ export default function StoryPlayer({
       }
       
       // テキストアニメーション開始
-      let timeout: NodeJS.Timeout;
       const startTextAnimation = () => {
+        let timeout: NodeJS.Timeout;
         // 全テキストを連結
         const fullText = segments.map(segment => segment.text).join('');
         let i = 0;
