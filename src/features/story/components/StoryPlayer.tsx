@@ -80,7 +80,7 @@ export default function StoryPlayer({
   const [showLearningPoint, setShowLearningPoint] = useState<boolean>(false);
   
   // UI関連の状態
-  const [showControls, setShowControls] = useState<boolean>(true); // コントロール表示状態
+  const [showControls, ] = useState<boolean>(true); // コントロール表示状態
   const [showSettings, setShowSettings] = useState<boolean>(false); // 設定パネル表示状態
   const [textSize, setTextSize] = useState<string>('medium'); // テキストサイズ
   const [musicOn, setMusicOn] = useState<boolean>(false); // BGM

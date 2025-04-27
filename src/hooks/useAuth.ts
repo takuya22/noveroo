@@ -26,11 +26,11 @@ export const useAuth = () => {
     try {
       await signIn("google", { callbackUrl: "/dashboard" });
       return { success: true };
-    } catch (error: any) {
-      setError(error.message || "ログインに失敗しました");
+    } catch (error: unknown) {
+      setError((error as Error).message || "ログインに失敗しました");
       return {
         success: false,
-        error: error.message || "ログインに失敗しました",
+        error: (error as Error).message || "ログインに失敗しました",
       };
     }
   };
@@ -72,9 +72,9 @@ export const useAuth = () => {
         }
         
         // 新しいストーリーデータは返さない (別のフックで管理)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error refreshing stories:", error);
-        setError(error.message);
+        setError((error as Error).message || "ストーリーの更新中にエラーが発生しました");
       } finally {
         setStoriesLoading(false);
       }

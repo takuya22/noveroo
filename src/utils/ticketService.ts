@@ -2,7 +2,7 @@
  * チケット管理のためのサービス
  */
 import { db } from '../lib/firebase';
-import { collection, doc, getDoc, setDoc, updateDoc, serverTimestamp, increment, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { Ticket } from './ticketModel';
 
 // 1日あたりのチケット補充数（無料ユーザー）

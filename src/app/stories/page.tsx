@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/features/common/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
+import Image from 'next/image';
 
 export default function StoriesPage() {
   const router = useRouter();
@@ -177,7 +178,7 @@ export default function StoriesPage() {
                     {/* サムネイル */}
                     <div className="h-48 relative cursor-pointer">
                       {story.thumbnailURL ? (
-                        <img
+                        <Image
                           src={story.thumbnailURL}
                           alt={`${story.title}のサムネイル`}
                           className="w-full h-full object-cover"

@@ -4,7 +4,7 @@
 import { db } from '@/lib/firebase';
 import { 
   collection, doc, getDoc, setDoc, updateDoc, 
-  increment, serverTimestamp, runTransaction, Timestamp 
+  increment, serverTimestamp, runTransaction 
 } from 'firebase/firestore';
 import { 
   PointsTransaction, 

@@ -9,6 +9,7 @@ import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { Header } from '@/features/landing/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
+import Image from 'next/image';
 
 export default function StoryDetailPage() {
   const params = useParams();
@@ -46,9 +47,9 @@ export default function StoryDetailPage() {
         if (isAuthenticated && user && data.metadata?.creator?.userId) {
           setIsOwner(user.uid === data.metadata.creator.userId);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching story:', err);
-        setError(err.message || 'ストーリーの読み込みに失敗しました');
+        setError((err as Error).message || 'ストーリーの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
@@ -237,7 +238,7 @@ export default function StoryDetailPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
                   <h2 className="text-xl font-semibold text-gray-800 mb-4">ストーリープレビュー</h2>
                   <div className="rounded-lg overflow-hidden">
-                    <img 
+                    <Image 
                       src={story.thumbnailURL} 
                       alt={`${story.title}のプレビュー`} 
                       className="w-full object-cover h-64"

@@ -1,7 +1,7 @@
 // Firebaseを使ったストーリー関連の操作
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, limit } from 'firebase/firestore';
-import { Story, createEmptyStoryData } from './storyModel';
+import { Story } from './storyModel';
 
 /**
  * 新しいストーリーをFirestoreに保存する

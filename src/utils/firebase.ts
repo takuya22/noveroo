@@ -1,5 +1,5 @@
 // Firebase関連のユーティリティ関数
-import { doc, collection, addDoc, updateDoc, getDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, addDoc, updateDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../lib/firebase';
 import { Story } from './storyModel';

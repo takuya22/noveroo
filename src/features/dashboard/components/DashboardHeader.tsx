@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 export default function DashboardHeader() {
   const { user, signOut } = useAuthContext();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
   // 画面外クリックでメニューを閉じる
@@ -120,7 +120,7 @@ export default function DashboardHeader() {
               >
                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200">
                   {user?.photoURL ? (
-                    <img
+                    <Image
                       src={user.photoURL}
                       alt={user.displayName || 'ユーザー'}
                       className="h-8 w-8 object-cover"
