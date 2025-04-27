@@ -124,6 +124,8 @@ export default function DashboardHeader() {
                       src={user.image}
                       alt={user.name || 'ユーザー'}
                       className="h-8 w-8 object-cover"
+                      width={32}
+                      height={32}
                     />
                   ) : (
                     <span className="text-sm font-semibold text-gray-600">

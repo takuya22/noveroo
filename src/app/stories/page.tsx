@@ -70,7 +70,7 @@ export default function StoriesPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
-      <main className="flex-grow pt-24">
+      <main className="flex-grow">
         {/* ヒーローセクション */}
         <div className="relative bg-gradient-to-r from-[var(--primary-light)] to-white">
           <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>

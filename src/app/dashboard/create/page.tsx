@@ -37,10 +37,10 @@ export default function CreateStory() {
 
   // 認証されていないユーザーにはモーダルを表示
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!isAuthenticated) {
       setShowAuthModal(true);
     }
-  }, [loading, isAuthenticated]);
+  }, [isAuthenticated]);
 
   // 認証モーダルを閉じた時の処理
   const handleCloseAuthModal = () => {
@@ -51,7 +51,7 @@ export default function CreateStory() {
 
   // ポイント情報を取得
   useEffect(() => {
-    if (status === 'loading' || !session) return;
+    if (status === 'loading') return;
     
     fetchPointsData();
   }, [session, status]);

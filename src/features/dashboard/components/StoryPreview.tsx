@@ -127,6 +127,8 @@ export default function StoryPreview({ story, onClose }: StoryPreviewProps) {
                 src={currentScene.sceneImageUrl} 
                 alt={currentScene.background} 
                 className="w-full h-full object-cover"
+                width={256}
+                height={144}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-gray-700 to-gray-900">
