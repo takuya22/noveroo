@@ -103,7 +103,7 @@ export default function PointsDisplay({ className = '' }: PointsDisplayProps) {
             <div className="mt-1 flex justify-between items-center">
               {renderTicketsStatus()}
               <div className="text-sm text-gray-500">
-                1日5回まで生成可能
+                1日3回まで生成可能
               </div>
             </div>
             

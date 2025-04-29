@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { Ticket } from './ticketModel';
 
 // 1日あたりのチケット補充数（無料ユーザー）
-const DAILY_TICKET_REFILL = 5;
+const DAILY_TICKET_REFILL = 3;
 
 /**
  * ユーザーのチケット情報を取得する
@@ -24,7 +24,7 @@ export async function getUserTickets(userId: string): Promise<Ticket> {
       // チケット情報がなければ初期値を作成
       const newTicket: Ticket = {
         userId,
-        remainingCount: DAILY_TICKET_REFILL, // 初期値は5チケット
+        remainingCount: DAILY_TICKET_REFILL, // 初期値は3チケット
         lastRefillDate: new Date()
       };
       
@@ -39,7 +39,7 @@ export async function getUserTickets(userId: string): Promise<Ticket> {
 }
 
 /**
- * チケットの自動補充をチェック（1日ごとに5チケット）
+ * チケットの自動補充をチェック（1日ごとに3チケット）
  * @param userId ユーザーID
  * @returns 補充後のチケット情報
  */
@@ -60,7 +60,7 @@ export async function checkAndRefillTickets(userId: string): Promise<Ticket> {
     if (!isSameDay) {
       const updatedTicket: Ticket = {
         ...ticket,
-        remainingCount: DAILY_TICKET_REFILL, // 毎日5チケットにリセット
+        remainingCount: DAILY_TICKET_REFILL, // 毎日3チケットにリセット
         lastRefillDate: now
       };
       

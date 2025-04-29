@@ -29,7 +29,7 @@ export const HeroSection = () => {
               Noverooは、最新のAI技術を使って誰でも簡単にインタラクティブなシミュレーションゲームを作れるプラットフォームです。<span className="font-medium text-gray-800">学びながら楽しめる教材作り</span>、個人の創作活動、シニアの方の新しい表現方法として、幅広く活用できます。
             </p>
             <p className="mt-3 text-sm font-medium text-[var(--primary)] bg-[var(--primary-light)] bg-opacity-20 inline-block px-3 py-1 rounded-full">
-              ベータ版期間中は1日5回まで無料でストーリー生成ができます
+              ベータ版期間中は1日3回まで無料でストーリー生成ができます
             </p>
             <div className="mt-12 flex items-center gap-x-5">
               <PrimaryButton 
