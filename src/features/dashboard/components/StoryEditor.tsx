@@ -23,7 +23,13 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
 
   // ストーリーの内容が変更されたときに状態を更新
   useEffect(() => {
-    setEditedStory(story);
+    // 常にクイズモードをtrueに設定
+    const updatedStory = {
+      ...story,
+      isQuizMode: true
+    };
+    
+    setEditedStory(updatedStory);
     
     // シーンをIDでマップ化して検索しやすくする
     const map: Record<string, Scene> = {};
@@ -306,9 +312,10 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
 
   // 変更を保存
   const handleSave = async () => {
-    // 最終的なストーリーデータを構築
+    // 最終的なストーリーデータを構築（isQuizModeを常にtrueに）
     const finalStory: Story = {
       ...editedStory,
+      isQuizMode: true,
       scenes: sceneOrder.map(id => scenesMap[id])
     };
     
@@ -442,28 +449,18 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
             </div>
             
             <div className="mb-4">
-              <div className="flex items-center">
-                <input
-                  id="isQuizMode"
-                  type="checkbox"
-                  className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] rounded"
-                  checked={!!editedStory.isQuizMode}
-                  onChange={(e) => {
-                    setEditedStory(prev => ({
-                      ...prev,
-                      isQuizMode: e.target.checked
-                    }));
-                    setUnsavedChanges(true);
-                  }}
-                />
-                <label htmlFor="isQuizMode" className="ml-2 block text-sm font-medium text-gray-700">
-                  クイズモード
-                </label>
+              <div className="p-3 bg-[var(--primary-light)] rounded-lg">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--primary)]" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                  <span className="ml-2 font-medium text-[var(--primary)]">クイズモードが有効です</span>
+                </div>
+                <p className="mt-1 text-sm text-gray-700">
+                  このアプリではクイズモードのみをサポートしています。ストーリーを進めながら問題に答えて学ぶスタイルになります。
+                  各シーンで設定したクイズ問題を順番に解いていく形式です。
+                </p>
               </div>
-              <p className="mt-1 text-sm text-gray-500">
-                クイズモードでは、ストーリーを進めながら問題に答えて学ぶスタイルになります。
-                各シーンで設定したクイズ問題を順番に解いていく形式です。
-              </p>
             </div>
           </div>
         )}
@@ -619,8 +616,8 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                         />
                       </div>
                       
-                      {/* クイズモードの場合はクイズ編集、それ以外は選択肢編集を表示 */}
-                      {editedStory.isQuizMode ? (
+                      {/* 常にクイズモード編集を表示 */}
+                      {true ? (
                         <div>
                           <div className="flex justify-between items-center mb-2">
                             <label className="block text-sm font-medium text-gray-700">
@@ -1008,9 +1005,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                             </button>
                           </div>
                           
-                          {activeScene.choices && activeScene.choices.length > 0 ? (
+                          {activeScene?.choices && activeScene!.choices!.length > 0 ? (
                             <div className="space-y-3">
-                              {activeScene.choices.map((choice, index) => (
+                              {activeScene!.choices!.map((choice, index) => (
                                 <div key={index} className="border border-gray-200 rounded-md p-3">
                                   <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm font-medium text-gray-700">選択肢 {index + 1}</span>
