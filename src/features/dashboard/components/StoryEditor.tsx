@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Story, Scene, Choice, LearningPoint } from '@/utils/storyModel';
 import StoryPreview from './StoryPreview';
+import BgmSelector from './BgmSelector';
 import Image from 'next/image';
 
 interface StoryEditorProps {
@@ -227,8 +228,12 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       id: newId,
       type: 'scene',
       background: 'default background',
-      text: '新しいシーンのテキスト',
-      text_en: 'New scene text',
+      text: [
+        { text: '新しいシーンのテキスト', speaker: '' }
+      ],
+      textEn: [
+        { text: 'New scene text', speaker: '' }
+      ],
       choices: [
         {
           text: '次へ',
@@ -326,10 +331,20 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
   const filteredScenes = searchTerm.trim() 
     ? sceneOrder.filter(id => {
         const scene = scenesMap[id];
+        // 配列型のテキストを検索できるように修正
+        const textContainsSearch = scene?.text?.some(quote => 
+          quote.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (quote.speaker && quote.speaker.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        const textEnContainsSearch = scene?.textEn?.some(quote => 
+          quote.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (quote.speaker && quote.speaker.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
         return (
           id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          scene?.text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          scene?.text_en?.toLowerCase().includes(searchTerm.toLowerCase())
+          textContainsSearch ||
+          textEnContainsSearch
         );
       })
     : sceneOrder;
@@ -417,7 +432,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               >
                 {sceneOrder.map(id => (
                   <option key={id} value={id}>
-                    {id} - {scenesMap[id]?.text?.substring(0, 30)}...
+                    {id} - {scenesMap[id]?.text && scenesMap[id]?.text.length > 0 
+                      ? scenesMap[id]?.text[0]?.text?.substring(0, 30)
+                      : ''}...
                   </option>
                 ))}
               </select>
@@ -448,7 +465,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               )}
             </div>
             
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <div className="p-3 bg-[var(--primary-light)] rounded-lg">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--primary)]" viewBox="0 0 20 20" fill="currentColor">
@@ -461,7 +478,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                   各シーンで設定したクイズ問題を順番に解いていく形式です。
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
 
@@ -526,7 +543,10 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                         )}
                       </div>
                       <p className="text-gray-600 text-xs truncate mt-1">
-                        {scenesMap[id]?.text?.substring(0, 40) || ''}...
+                        {scenesMap[id]?.text && scenesMap[id]?.text.length > 0 
+                          ? (scenesMap[id]?.text[0]?.speaker ? `(${scenesMap[id]?.text[0]?.speaker}) ` : '') + 
+                            scenesMap[id]?.text[0]?.text?.substring(0, 40)
+                          : ''}...
                       </p>
                     </li>
                   ))}
@@ -596,24 +616,286 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           テキスト（日本語）
                         </label>
-                        <textarea
-                          rows={5}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                          value={activeScene.text}
-                          onChange={(e) => updateScene(activeSceneId!, 'text', e.target.value)}
-                        />
+                        <div className="space-y-3">
+                          {activeScene.text && activeScene.text.map((quote, index) => (
+                            <div key={index} className="border border-gray-200 rounded-md p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    話者
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.speaker || ''}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.text];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        speaker: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="話者名"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    テキスト
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.text}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.text];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        text: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="セリフやナレーション"
+                                  />
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      const updatedQuotes = activeScene.text.filter((_, i) => i !== index);
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const newQuote = { text: '', speaker: '' };
+                              const updatedQuotes = [...(activeScene.text || []), newQuote];
+                              
+                              const updatedScene = {
+                                ...activeScene,
+                                text: updatedQuotes
+                              };
+                              
+                              const updatedMap = {
+                                ...scenesMap,
+                                [activeSceneId!]: updatedScene
+                              };
+                              
+                              setScenesMap(updatedMap);
+                              setEditedStory(prev => ({
+                                ...prev,
+                                scenes: sceneOrder.map(id => updatedMap[id])
+                              }));
+                              
+                              setUnsavedChanges(true);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-[var(--primary)] border border-dashed border-[var(--primary)] rounded-md hover:bg-[var(--primary-light)] hover:text-white transition-colors"
+                          >
+                            + テキスト/セリフを追加
+                          </button>
+                        </div>
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           テキスト（英語）
                         </label>
-                        <textarea
-                          rows={5}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                          value={activeScene.text_en}
-                          onChange={(e) => updateScene(activeSceneId!, 'text_en', e.target.value)}
-                        />
+                        <div className="space-y-3">
+                          {activeScene.textEn && activeScene.textEn.map((quote, index) => (
+                            <div key={index} className="border border-gray-200 rounded-md p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    話者
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.speaker || ''}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.textEn];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        speaker: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="Speaker name"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    テキスト
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.text}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.textEn];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        text: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="Line or narration"
+                                  />
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      const updatedQuotes = activeScene.textEn.filter((_, i) => i !== index);
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const newQuote = { text: '', speaker: '' };
+                              const updatedQuotes = [...(activeScene.textEn || []), newQuote];
+                              
+                              const updatedScene = {
+                                ...activeScene,
+                                textEn: updatedQuotes
+                              };
+                              
+                              const updatedMap = {
+                                ...scenesMap,
+                                [activeSceneId!]: updatedScene
+                              };
+                              
+                              setScenesMap(updatedMap);
+                              setEditedStory(prev => ({
+                                ...prev,
+                                scenes: sceneOrder.map(id => updatedMap[id])
+                              }));
+                              
+                              setUnsavedChanges(true);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-[var(--primary)] border border-dashed border-[var(--primary)] rounded-md hover:bg-[var(--primary-light)] hover:text-white transition-colors"
+                          >
+                            + Add text/line
+                          </button>
+                        </div>
                       </div>
                       
                       {/* 常にクイズモード編集を表示 */}
@@ -1103,6 +1385,40 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                             />
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* BGM設定 */}
+                      <div className="mt-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            BGM設定
+                          </label>
+                        </div>
+                        
+                        <BgmSelector 
+                          selectedBgm={activeScene.sceneBgmType || null}
+                          onChange={(bgmType) => {
+                            const updatedScene = {
+                              ...activeScene,
+                              sceneBgmType: bgmType || undefined
+                            };
+                            
+                            const updatedMap = {
+                              ...scenesMap,
+                              [activeSceneId!]: updatedScene
+                            };
+                            
+                            setScenesMap(updatedMap);
+                            
+                            // 編集中のストーリーも更新
+                            setEditedStory(prev => ({
+                              ...prev,
+                              scenes: sceneOrder.map(id => updatedMap[id])
+                            }));
+                            
+                            setUnsavedChanges(true);
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
