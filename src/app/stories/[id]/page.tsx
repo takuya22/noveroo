@@ -7,9 +7,9 @@ import { Story } from '@/utils/storyModel';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
 import { SecondaryButton } from '@/ui/buttons/SecondaryButton';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { Header } from '@/features/landing/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import Image from 'next/image';
+import Header from '@/components/Header';
 
 export default function StoryDetailPage() {
   const params = useParams();
@@ -21,6 +21,11 @@ export default function StoryDetailPage() {
   const [story, setStory] = useState<Story | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState<boolean>(false);
+
+  // リダイレクト
+  useEffect(() => {
+      router.push('/stories');
+  }, [router]);
   
   // ストーリーデータを取得
   useEffect(() => {

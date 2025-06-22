@@ -1,6 +1,6 @@
 // Firebaseを使ったストーリー関連の操作
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { Story } from './storyModel';
 
 /**
@@ -48,10 +48,21 @@ export async function getUserStories(userId: string) {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    return querySnapshot.docs.map(doc => {
+      const rawCreatedAt = doc.data().metadata?.createdAt;
+
+      const createdAt = rawCreatedAt && typeof rawCreatedAt === 'object' && 'seconds' in rawCreatedAt
+        ? new Timestamp(rawCreatedAt.seconds, rawCreatedAt.nanoseconds).toDate()
+        : null;
+      return {
+        id: doc.id,
+        ...doc.data(),
+        metadata: {
+          ...doc.data().metadata,
+          createdAt: createdAt,
+        },
+      };
+    });
   } catch (error) {
     console.error('Error getting user stories:', error);
     throw new Error('ストーリー一覧の取得に失敗しました');

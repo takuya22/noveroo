@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { useSession } from 'next-auth/react';
-import Header from '@/features/common/components/Header';
-import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
+import Header from '@/components/Header';
+// import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 
-const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
+// const POINTS_PER_STORY = 100; // 1ストーリー生成あたりの消費ポイント数
 
 // 作成方法の選択タブ
 const creationMethods = [
@@ -19,7 +17,7 @@ const creationMethods = [
 ];
 
 export default function CreateStory() {
-  const { data: session, status } = useSession();
+  // const { data: session, status } = useSession();
   const { loading, isAuthenticated } = useAuthContext();
   const router = useRouter();
   const [activeMethod, setActiveMethod] = useState('theme');
@@ -27,12 +25,12 @@ export default function CreateStory() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [pointsData, setPointsData] = useState({
-    totalPoints: 0,
-    isPremium: false,
-    subscriptionStatus: 'none',
-  });
-  const [loadingPoints, setLoadingPoints] = useState(true);
+  // const [pointsData, setPointsData] = useState({
+  //   totalPoints: 0,
+  //   isPremium: false,
+  //   subscriptionStatus: 'none',
+  // });
+  // const [loadingPoints, setLoadingPoints] = useState(true);
   const [insufficientPoints, setInsufficientPoints] = useState(false);
 
   // 認証されていないユーザーにはモーダルを表示
@@ -49,28 +47,28 @@ export default function CreateStory() {
     router.push('/');
   };
 
-  // ポイント情報を取得
-  useEffect(() => {
-    if (status === 'loading') return;
+  // // ポイント情報を取得
+  // useEffect(() => {
+  //   if (status === 'loading') return;
     
-    fetchPointsData();
-  }, [session, status]);
+  //   fetchPointsData();
+  // }, [session, status]);
 
-  const fetchPointsData = async () => {
-    try {
-      setLoadingPoints(true);
-      const response = await fetch('/api/stripe/subscription-status');
-      if (response.ok) {
-        const data = await response.json();
-        setPointsData(data);
-        setInsufficientPoints(data.totalPoints < POINTS_PER_STORY);
-      }
-    } catch (error) {
-      console.error('Error fetching points data:', error);
-    } finally {
-      setLoadingPoints(false);
-    }
-  };
+  // const fetchPointsData = async () => {
+  //   try {
+  //     setLoadingPoints(true);
+  //     const response = await fetch('/api/stripe/subscription-status');
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setPointsData(data);
+  //       setInsufficientPoints(data.totalPoints < POINTS_PER_STORY);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching points data:', error);
+  //   } finally {
+  //     setLoadingPoints(false);
+  //   }
+  // };
 
   // 作成方法に基づいたプレースホルダーテキスト
   const getPlaceholderText = () => {
@@ -95,11 +93,11 @@ export default function CreateStory() {
       return;
     }
     
-    // ポイント不足のチェック
-    if (pointsData.totalPoints < POINTS_PER_STORY) {
-      setInsufficientPoints(true);
-      return;
-    }
+    // // ポイント不足のチェック
+    // if (pointsData.totalPoints < POINTS_PER_STORY) {
+    //   setInsufficientPoints(true);
+    //   return;
+    // }
     
     setIsCreating(true);
     setError('');
@@ -147,7 +145,7 @@ export default function CreateStory() {
   };
 
   // ローディング中の表示
-  if (loading || loadingPoints) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
@@ -159,7 +157,7 @@ export default function CreateStory() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-[65px]">
       <Header />
       
       {/* 認証モーダル */}
@@ -186,7 +184,7 @@ export default function CreateStory() {
             </div>
             
             {/* ポイント不足の警告 */}
-            {insufficientPoints && (
+            {/* {insufficientPoints && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start">
                   <svg className="h-5 w-5 text-red-500 mt-0.5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -205,10 +203,10 @@ export default function CreateStory() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="md:col-span-2">
+              <div className="md:col-span-3">
                 {/* 作成方法の選択タブ */}
                 <div className="bg-white rounded-t-lg border border-gray-200 border-b-0">
                   <div className="flex border-b border-gray-200">
@@ -303,9 +301,9 @@ export default function CreateStory() {
                 </div>
               </div>
               
-              <div>
+              {/* <div>
                 <PointsDisplay className="mb-6" />
-              </div>
+              </div> */}
             </div>
           </div>
         </main>

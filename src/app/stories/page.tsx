@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Header from '@/features/common/components/Header';
+import Header from '@/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
 import { PrimaryButton } from '@/ui/buttons/PrimaryButton';
 import Image from 'next/image';
@@ -70,9 +70,9 @@ export default function StoriesPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
-      <main className="flex-grow">
+      <main className="flex-grow mt-[65px]">
         {/* ヒーローセクション */}
-        <div className="relative bg-gradient-to-r from-[var(--primary-light)] to-white">
+        {/* <div className="relative bg-gradient-to-r from-[var(--primary-light)] to-white">
           <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
           <div className="container mx-auto px-6 py-16 relative">
             <div className="max-w-4xl">
@@ -91,7 +91,7 @@ export default function StoriesPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* コンテンツエリア */}
         <div className="container mx-auto px-6 py-12">
@@ -173,8 +173,8 @@ export default function StoriesPage() {
                 {filteredStories.slice(0, visibleStories).map((story: Story) => (
                   <div 
                     key={story.id} 
-                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 flex flex-col"
-                    onClick={() => router.push(`/stories/${story.id}`)}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 flex flex-col cursor-pointer"
+                    onClick={() => router.push(`/stories/${story.id}/play`)}
                   >
                     {/* サムネイル */}
                     <div className="h-48 relative cursor-pointer">
@@ -210,15 +210,15 @@ export default function StoriesPage() {
                       <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">{story.description}</p>
                       
                       <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
-                        <div className="text-xs text-gray-500">
+                        {/* <div className="text-xs text-gray-500">
                           {story.metadata?.creator?.username || '匿名'}さんの作品
-                        </div>
+                        </div> */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/stories/${story.id}/play`);
                           }}
-                          className="px-3 py-1.5 bg-[var(--primary)] text-white text-sm rounded-md hover:bg-[var(--primary-dark)] transition-colors flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-[var(--primary)] text-white text-sm rounded-md hover:bg-[var(--primary-dark)] transition-colors flex items-center space-x-1 cursor-pointer"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />

@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
 import StoryEditor from '@/features/dashboard/components/StoryEditor';
 import { Story } from '@/utils/storyModel';
-import Header from '@/features/common/components/Header';
+import Header from '@/components/Header';
 
 export default function EditStory() {
   const { loading, isAuthenticated } = useAuthContext();
@@ -113,7 +113,7 @@ export default function EditStory() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <Header type="dashboard" />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
             <div className="flex items-center mb-6">
@@ -154,7 +154,7 @@ export default function EditStory() {
   if (!storyData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <Header type="dashboard" />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
             <div className="flex items-center mb-6">
@@ -180,7 +180,7 @@ export default function EditStory() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header type="dashboard" />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">

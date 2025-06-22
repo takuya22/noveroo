@@ -55,7 +55,8 @@ export default function PlayStoryPage() {
   
   // プレイ画面を閉じる
   const handleClose = () => {
-    router.push(`/stories/${storyId}`);
+    // router.push(`/stories/${storyId}`);
+    router.push(`/stories`);
   };
   
   // ローディング表示

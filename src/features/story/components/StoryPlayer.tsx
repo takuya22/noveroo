@@ -83,7 +83,7 @@ export default function StoryPlayer({
   const [showControls, ] = useState<boolean>(true); // コントロール表示状態
   const [showSettings, setShowSettings] = useState<boolean>(false); // 設定パネル表示状態
   const [textSize, setTextSize] = useState<string>('medium'); // テキストサイズ
-  const [musicOn, setMusicOn] = useState<boolean>(false); // BGM
+  const [musicOn, setMusicOn] = useState<boolean>(true); // BGM
   const [sfxOn, setSfxOn] = useState<boolean>(true); // 効果音
   const [speechOn, setSpeechOn] = useState<boolean>(true); // 音声ナレーション
   const [nightMode, setNightMode] = useState<boolean>(false); // ナイトモード
@@ -512,10 +512,6 @@ export default function StoryPlayer({
   
   // シーンのBGMを再生する関数
   const playSceneBgm = (scene: Scene) => {
-    console.log("playSceneBgm called with scene");
-    console.log("isSceneBgmCategory:", isSceneBgmCategory(scene.sceneBgmType));
-    console.log("scene.sceneBgmType:", !scene.sceneBgmType);
-    console.log("musicOn:", musicOn);
     if (!scene.sceneBgmType || !isSceneBgmCategory(scene.sceneBgmType)) {
       return;
     }
@@ -1053,9 +1049,9 @@ export default function StoryPlayer({
             </div>
           </div>
           
-          <div className="mt-4 text-xs text-gray-400">
+          {/* <div className="mt-4 text-xs text-gray-400">
             <p>キーボードショートカット: スペース(次へ), A(自動), H(履歴), S(設定), F(UI表示切替)</p>
-          </div>
+          </div> */}
         </div>
       )}
       
@@ -1338,7 +1334,7 @@ export default function StoryPlayer({
           {showChoices && !story.isQuizMode && activeScene.choices && activeScene.choices.length > 0 && (
             <div className={`${
               nightMode ? 'bg-gray-800 bg-opacity-25' : 'bg-gray-100 bg-opacity-25'
-            } backdrop-blur-sm p-6 space-y-3 transition-colors duration-300 rounded-b-xl`}>
+            } backdrop-blur-sm p-6 space-y-3 transition-colors duration-300 rounded-b-xl mb-[73px] lg:mb-0`}>
               {activeScene.choices.map((choice, index) => (
                 <button
                   key={index}

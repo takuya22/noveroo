@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { PrimaryButton } from '../../../ui/buttons/PrimaryButton';
 import { PlayIcon } from '../../../ui/icons/Play';
+import Link from 'next/link';
 
 // シミュレーションゲームのサンプルデータ
 const sampleGames = [
@@ -119,11 +120,14 @@ export const SampleGamesSection = () => {
           <p className="text-lg font-medium text-gray-600 mb-6">
             お気に入りのシナリオが見つからない？<br className="sm:hidden" />あなただけのオリジナルゲームを作りましょう！
           </p>
-          <PrimaryButton 
-            className="rounded-md px-8 py-3 text-base font-medium shadow"
-          >
-            自分のゲームを作る
-          </PrimaryButton>
+
+          <Link href="/dashboard/create">
+            <PrimaryButton 
+              className="rounded-md px-8 py-3 text-base font-medium shadow"
+            >
+              自分のゲームを作る
+            </PrimaryButton>
+          </Link>
         </div>
       </div>
 

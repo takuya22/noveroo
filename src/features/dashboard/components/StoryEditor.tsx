@@ -1447,7 +1447,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                 onChange={(e) => updateMetadata('visibility', e.target.value)}
               >
                 <option value="private">非公開（自分だけが閲覧可能）</option>
-                <option value="unlisted">限定公開（URLを知っている人が閲覧可能）</option>
+                {/* <option value="unlisted">限定公開（URLを知っている人が閲覧可能）</option> */}
                 <option value="public">公開（誰でも閲覧可能）</option>
               </select>
             </div>
@@ -1541,7 +1541,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               </span>
             )}
             
-            <button
+            {/* <button
               onClick={() => setShowPreview(true)}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)]"
             >
@@ -1550,7 +1550,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
               プレビュー
-            </button>
+            </button> */}
           </div>
           
           <div>
