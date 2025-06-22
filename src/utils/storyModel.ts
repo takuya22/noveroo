@@ -10,6 +10,12 @@ export interface Character {
   };
 }
 
+export interface Quote {
+  text: string;
+  speaker?: string; // 発言者の名前（オプション）
+  speaker_type?: string; // 発言者のタイプ（例: 'hero', 'villain'など）
+}
+
 export interface Choice {
   text: string;
   nextScene: string;
@@ -39,12 +45,14 @@ export interface Scene {
   type: string;
   background: string;
   characters?: Character[];
-  text: string;
-  text_en: string;
+  text: Quote[];
+  textEn: Quote[];
   choices?: Choice[];     // 従来の分岐用選択肢（下位互換性のため残す）
   quiz?: Quiz;            // 新しいクイズ機能
   nextScene?: string;     // 次のシーンへの直接リンク（一本道ストーリー用）
   sceneImageUrl?: string;
+  sceneSpeechUrls?: string[]; // 音声ファイルのURL
+  sceneBgmType?: string;   // BGMファイルのタイプ
   useGeneratedImage?: boolean;
   learningPoint?: LearningPoint;
 }
@@ -106,4 +114,20 @@ export function createEmptyStoryData(): Story {
     },
     isQuizMode: false,
   };
+}
+
+enum sceneBgmCategory {
+  NONE = 'none',
+  AST_DAILY = 'ast_daily',
+  CALM_DOWN = 'calm_down',
+  CAFE = 'cafe',
+  FOREIGN_LAND = 'foreign_land',
+  DESERTED_TOWN = 'deserted_town',
+  FANTASY = 'fantasy',
+  EIGHT_BIT = '8bit',
+  TUTORIAL = 'tutorial'
+}
+
+export function isSceneBgmCategory(value: string): value is sceneBgmCategory {
+  return Object.values(sceneBgmCategory).includes(value as sceneBgmCategory);
 }

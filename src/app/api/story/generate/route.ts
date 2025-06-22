@@ -6,6 +6,7 @@ import { getUserPoints } from '@/utils/pointsService';
 import { getTicketCount, consumeTicket } from '@/utils/ticketService';
 import { POINTS_PER_STORY } from '@/lib/stripe';
 import { authOptions } from '@/lib/authOptions';
+import { generateSpeech } from '@/utils/gemini-tts';
 
 /**
  * ストーリー生成APIエンドポイント
@@ -77,13 +78,13 @@ export async function POST(req: NextRequest) {
     }
 
     // ストーリーを生成
-    const storyData = await generateStory(prompt, options, true);
+    const storyData = await generateStory(prompt, options, false);
 
     // 画像生成が有効な場合
     if (generateImages && storyData && storyData.scenes) {
       // シーン画像を生成（最初の3シーンのみ、リソース節約のため）
       const processScenes = storyData.scenes.slice(0, 3);
-      
+
       await Promise.all(processScenes.map(async (scene) => {
         try {
           // 英語のテキストと背景を使って画像プロンプトを作成
@@ -91,11 +92,10 @@ export async function POST(req: NextRequest) {
             ? scene.characters.map(c => c.id).join('、')
             : '';
           
-          const scenePrompt = `A scene of ${scene.background}. ${characterDescriptions ? `Characters: ${characterDescriptions}. ` : ''}${scene.text_en}`;
+          const scenePrompt = `A scene of ${scene.background}. ${characterDescriptions ? `Characters: ${characterDescriptions}. ` : ''}${scene.textEn}`;
           
           const enhancedPrompt = `
             Japanese anime style image for an educational simulation game scene.
-            Please make the characters animals.
             No speech bubbles or dialogue text.
             In widescreen format, showing a complete scene with background and characters.
             
@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
           
           // 画像を生成し、Firebase Storageに保存
           scene.sceneImageUrl = await generateImage(enhancedPrompt);
+          scene.sceneSpeechUrls = await generateSpeech(scene.text)
           scene.useGeneratedImage = true;
         } catch (error) {
           console.error(`Error generating scene image: ${error}`);

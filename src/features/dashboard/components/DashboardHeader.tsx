@@ -74,7 +74,7 @@ export default function DashboardHeader() {
                   : 'text-gray-600 hover:text-[#34a853] hover:bg-[#f0f9f2]'
               }`}
             >
-              パブリックストーリー
+              ストーリー
             </Link>
             <Link 
               href="/dashboard/create" 
@@ -189,7 +189,7 @@ export default function DashboardHeader() {
               }`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              パブリックストーリー
+              ストーリー
             </Link>
           </div>
         </div>

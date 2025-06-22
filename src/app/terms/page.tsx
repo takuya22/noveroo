@@ -194,7 +194,17 @@ export default function TermsPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">18. お問い合わせ窓口</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">18. クレジット表記</h2>
+            <p className="mb-4">
+              本サービスでは、以下の素材を使用しています。
+            </p>
+            <ul className="list-none pl-0 mb-4">
+              <li>音楽：魔王魂</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">19. お問い合わせ窓口</h2>
             <p className="mb-4">
               本規約に関するお問い合わせは、下記のメールアドレスまでお願いいたします。
             </p>

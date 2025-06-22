@@ -26,7 +26,7 @@ export default function Header({ isLandingPage = false }) {
   // アプリケーション内のナビゲーションリンク
   const appNavigation = [
     { name: 'ダッシュボード', href: '/dashboard' },
-    { name: 'パブリックストーリー', href: '/stories' },
+    { name: 'ストーリー', href: '/stories' },
     { name: '新規作成', href: '/dashboard/create' },
   ];
 
