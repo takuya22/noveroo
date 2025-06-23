@@ -99,6 +99,10 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
               type: SchemaType.STRING,
               description: "BGMタイプ（例: 'none', 'ast_daily', 'calm_down', 'cafe', 'foreign_land', 'deserted_town', 'fantasy', '8bit', 'tutorial'）, 'tutorial'"
             },
+            endingType: {
+              type: SchemaType.STRING,
+              description: "ストーリーのエンディングタイプ (happy, bad, true, mystery, normal, instant-death)",
+            },
             characters: {
               type: SchemaType.ARRAY,
               description: "登場キャラクター",
@@ -163,7 +167,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
             },
             choices: {
               type: SchemaType.ARRAY,
-              description: "選択肢配列",
+              description: "選択肢配列（エンディングのシーン以外は必須）",
               items: {
                 type: SchemaType.OBJECT,
                 properties: {
@@ -395,6 +399,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       "type": "scene",
       "background": "詳細な背景描写を英語で（atmosphere, lighting, environmentを含める）",
       "sceneBgmType": "none", // BGMタイプ（例: 'none', 'default', 'ast_daily', 'calm_down', 'cafe', 'foreign_land', 'deserted_town', 'fantasy', '8bit', 'tutorial'）
+      "endingType": "エンディングのタイプ（"happy" ,"bad", "true", "mystery", "normal", "instant-death"） 話の途中では設定しないでください",
       "characters": [
         {"id": "キャラクターを英語で簡潔に記述。名前もあり。", "position": {"x": 50, "y": 20}}
       ],

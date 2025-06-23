@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, ReactNode } from 'react';
-import { Story, Scene, Choice, isSceneBgmCategory } from '@/utils/storyModel';
+import { Story, Scene, Choice, isSceneBgmCategory, EndingType } from '@/utils/storyModel';
+import LottieEndingAnimation from './LottieEndingAnimation';
 
 // テキスト内の話者情報と対応するテキストを解析する関数
 const parseTextWithSpeakers = (text: string) => {
@@ -95,6 +96,10 @@ export default function StoryPlayer({
   
   // シーン切り替えエフェクト
   const [transition, setTransition] = useState<boolean>(false);
+  
+  // エンディングアニメーション
+  const [showEndingAnimation, setShowEndingAnimation] = useState<boolean>(false);
+  const [currentEndingType, setCurrentEndingType] = useState<EndingType | null>(null);
   
   // 履歴管理
   const [history, setHistory] = useState<Array<{sceneId: string, choice?: string}>>([]);
@@ -431,6 +436,15 @@ export default function StoryPlayer({
         ...(story.isQuizMode && { correctAnswers: totalCorrect, totalQuestions: totalQuestions })
       }));
       
+      // シーンまたはストーリーにエンディングタイプがある場合はアニメーション表示
+      const endingType = activeScene.endingType;
+      if (endingType) {
+        setCurrentEndingType(endingType);
+        setShowEndingAnimation(true);
+        // エンディングアニメーションは自動で終了するので、ここではonCompleteやonCloseを呼び出さない
+        return;
+      }
+      
       if (onComplete) {
         onComplete(playData);
       }
@@ -462,6 +476,20 @@ export default function StoryPlayer({
     setTextSize(size);
   };
   
+  // エンディングアニメーション完了後の処理
+  const handleEndingAnimationComplete = () => {
+    setShowEndingAnimation(false);
+    setCurrentEndingType(null);
+    
+    if (onComplete) {
+      onComplete(playData);
+    }
+    
+    if (onClose) {
+      onClose();
+    }
+  };
+  
   // BGMの切り替え
   const toggleMusic = () => {
     setMusicOn(prev => {
@@ -481,6 +509,7 @@ export default function StoryPlayer({
           bgmRef.current.pause();
         }
       }
+      // console.log("BGM状態:", newState ? "オン" : "オフ");
       return newState;
     });
   };
@@ -745,6 +774,14 @@ export default function StoryPlayer({
       className={`relative ${standalone ? 'min-h-screen' : 'min-h-[600px]'} bg-black overflow-hidden`}
       onClick={handleScreenClick}
     >
+      {/* エンディングアニメーション */}
+      {showEndingAnimation && currentEndingType && (
+        <LottieEndingAnimation 
+          endingType={currentEndingType}
+          onComplete={handleEndingAnimationComplete}
+          visible={showEndingAnimation}
+        />
+      )}
       {/* ツールバー（上部に表示するUI） - PCのみ表示 */}
       {showUI && showControls && (
         <div className="absolute top-0 left-0 right-0 z-30 bg-black bg-opacity-40 backdrop-blur-sm text-white p-2 hidden md:flex justify-between items-center transition-opacity duration-300">

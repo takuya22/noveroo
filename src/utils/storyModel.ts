@@ -55,6 +55,7 @@ export interface Scene {
   sceneBgmType?: string;   // BGMファイルのタイプ
   useGeneratedImage?: boolean;
   learningPoint?: LearningPoint;
+  endingType?: EndingType; // シーンのエンディングタイプ
 }
 
 export interface Options {
@@ -78,6 +79,8 @@ export interface Metadata {
   tags?: string[];
   difficulty?: string;
 }
+
+export type EndingType = 'happy' | 'bad' | 'true' | 'mystery' | 'normal' | 'instant-death';
 
 export interface Story {
   id?: string;
