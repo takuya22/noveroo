@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Header } from '@/features/landing/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
+import Header from '@/components/Header';
 
 export default function TermsPage() {
   return (

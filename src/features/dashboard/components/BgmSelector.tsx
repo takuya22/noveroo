@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { AVAILABLE_BGMS, BgmDefinition, BGM_CATEGORY_NAMES } from '@/utils/bgmConstants';
+import { AVAILABLE_BGMS, BGM_CATEGORY_NAMES } from '@/utils/bgmConstants';
 
 interface BgmSelectorProps {
   selectedBgm: string | null;
@@ -186,6 +186,7 @@ export default function BgmSelector({ selectedBgm, onChange, className = '' }: B
                     <button
                       onClick={(e) => {
                         e.stopPropagation(); 
+                        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                         isPlaying === bgm.url ? stopBgm() : playBgm(bgm.url);
                       }}
                       className={`p-2 rounded-full ${

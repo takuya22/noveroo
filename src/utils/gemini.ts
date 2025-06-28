@@ -25,7 +25,6 @@ const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // const credentialKey = Buffer.from(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY || '', 'base64').toString('utf-8') as any;
 // console.log('GCP Vertex AI credentials key:', credentialKey);
 const credentials = JSON.parse(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY!);
