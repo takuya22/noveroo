@@ -3,9 +3,9 @@ import { generateStory, generateImage } from '@/utils/gemini';
 import { saveStoryToFirestore } from '@/utils/firebase';
 import { getServerSession } from 'next-auth/next';
 import { getUserPoints } from '@/utils/pointsService';
-import { getTicketCount, consumeTicket } from '@/utils/ticketService';
 import { POINTS_PER_STORY } from '@/lib/stripe';
 import { authOptions } from '@/lib/authOptions';
+import { generateSpeech } from '@/utils/gemini-tts';
 
 /**
  * ストーリー生成APIエンドポイント
@@ -42,19 +42,10 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id;
 
-    // チケット情報を取得
-    const ticketCount = await getTicketCount(userId);
-    if (ticketCount <= 0) {
-      return NextResponse.json({
-        error: 'チケットが不足しています',
-        currentTickets: ticketCount,
-      }, { status: 402 });
-    }
-
-    // ユーザーのポイント情報も取得（ログ用）
+    // ユーザーのポイント情報を取得（ログ用）
     const userPoints = await getUserPoints(userId);
     if (!userPoints) {
-      console.warn(`User points not found for user ${userId}, but continuing with ticket`);
+      console.warn(`User points not found for user ${userId}, continuing anyway`);
     }
 
     let prompt;
@@ -77,25 +68,24 @@ export async function POST(req: NextRequest) {
     }
 
     // ストーリーを生成
-    const storyData = await generateStory(prompt, options, true);
+    const storyData = await generateStory(prompt, options, false);
 
     // 画像生成が有効な場合
     if (generateImages && storyData && storyData.scenes) {
       // シーン画像を生成（最初の3シーンのみ、リソース節約のため）
-      const processScenes = storyData.scenes.slice(0, 3);
-      
-      await Promise.all(processScenes.map(async (scene) => {
+      // const processScenes = storyData.scenes.slice(0, 3);
+
+      await Promise.all(storyData.scenes.map(async (scene) => {
         try {
           // 英語のテキストと背景を使って画像プロンプトを作成
           const characterDescriptions = scene.characters && scene.characters.length > 0
             ? scene.characters.map(c => c.id).join('、')
             : '';
           
-          const scenePrompt = `A scene of ${scene.background}. ${characterDescriptions ? `Characters: ${characterDescriptions}. ` : ''}${scene.text_en}`;
+          const scenePrompt = `A scene of ${scene.background}. ${characterDescriptions ? `Characters: ${characterDescriptions}. ` : ''}${scene.textEn}`;
           
           const enhancedPrompt = `
             Japanese anime style image for an educational simulation game scene.
-            Please make the characters animals.
             No speech bubbles or dialogue text.
             In widescreen format, showing a complete scene with background and characters.
             
@@ -111,6 +101,7 @@ export async function POST(req: NextRequest) {
           
           // 画像を生成し、Firebase Storageに保存
           scene.sceneImageUrl = await generateImage(enhancedPrompt);
+          scene.sceneSpeechUrls = await generateSpeech(scene.text)
           scene.useGeneratedImage = true;
         } catch (error) {
           console.error(`Error generating scene image: ${error}`);
@@ -144,23 +135,10 @@ export async function POST(req: NextRequest) {
     try {
       storyId = await saveStoryToFirestore(userId, storyData!);
       console.log(`Story saved to Firestore with ID: ${storyId}`);
-      
-      // チケットを使用
-      if (storyId) {
-        try {
-          const remainingTickets = await consumeTicket(userId);
-          console.log(`Ticket used for user ${userId}, remaining tickets: ${remainingTickets}`);
-        } catch (ticketError) {
-          console.warn(`Failed to consume ticket for user ${userId}, but story was created: ${ticketError}`);
-        }
-      }
     } catch (error) {
       console.error('Firestore保存エラー:', error);
       // エラーが発生しても続行（保存失敗でもストーリーは返す）
     }
-
-    // 残りのチケット数を再取得
-    const remainingTickets = await getTicketCount(userId);
     
     // レスポンスを返す
     return NextResponse.json({
@@ -169,10 +147,7 @@ export async function POST(req: NextRequest) {
       storyId,
       // ポイント情報も一応残しておく（クライアント側の互換性維持のため）
       pointsConsumed: userPoints ? POINTS_PER_STORY : 0,
-      remainingPoints: userPoints ? userPoints.totalPoints : 0,
-      // チケット情報を追加
-      ticketUsed: true,
-      remainingTickets,
+      remainingPoints: userPoints ? userPoints.totalPoints : 0
     });
   } catch (error: unknown) {
     console.error('Story generation error:', error);

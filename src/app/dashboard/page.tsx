@@ -9,8 +9,7 @@ import Link from 'next/link';
 // コンポーネントのインポート
 import StoryList from '@/features/dashboard/components/StoryList';
 import EmptyState from '@/features/dashboard/components/EmptyState';
-import PointsDisplay from '@/features/dashboard/components/PointsDisplay';
-import Header from '@/features/common/components/Header';
+import Header from '@/components/Header';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 
 // SearchParamsを使用する部分を別コンポーネントに分離
@@ -20,6 +19,8 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  // 公開・非公開のフィルタリング用の状態
+  const [filterMode, setFilterMode] = useState<'all' | 'public'>('all');
   
   // URLパラメータを確認
   const success = searchParams.get('success');
@@ -42,18 +43,34 @@ function DashboardContent() {
   // ローディング中の表示
   if (loading || storiesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#f9fafb]">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-2 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">読み込み中...</p>
         </div>
       </div>
     );
   }
 
+  // 統計情報
+  const totalStories = stories ? stories.length : 0;
+  const publicStories = stories ? stories.filter(story => story.metadata?.visibility === 'public').length : 0;
+
+  // フィルタリングされたストーリー
+  const filteredStories = stories ? (
+    filterMode === 'all' 
+      ? stories 
+      : stories.filter(story => story.metadata?.visibility === 'public')
+  ).sort((a, b) => {
+    // 作成日順に並び替え（新しい順）
+    const aDate = a.metadata?.createdAt ? new Date(a.metadata.createdAt as Date) : new Date(0);
+    const bDate = b.metadata?.createdAt ? new Date(b.metadata.createdAt as Date) : new Date(0);
+    return bDate.getTime() - aDate.getTime();
+  }) : [];
+
   // 以下は認証済みユーザー向けの表示内容
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
+    <div className="min-h-screen bg-white pt-[65px]">
       <Header />
       
       {/* 認証モーダル */}
@@ -65,93 +82,72 @@ function DashboardContent() {
       
       {/* 認証済みの場合のみメインコンテンツを表示 */}
       {isAuthenticated && (
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
           {success && sessionId && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-              <p className="font-medium">サブスクリプションが正常に開始されました！ポイントが追加されました。</p>
+            <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+              <p>サブスクリプションが正常に開始されました！</p>
             </div>
           )}
           
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* サイドバー（デスクトップでは左側、モバイルでは上部） */}
-            <div className="lg:col-span-1 space-y-6">
-              <PointsDisplay className="" />
-              
-              {/* クイックリンクカード */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="text-md font-medium text-gray-900">クイックリンク</h3>
-                </div>
-                <div className="p-5">
-                  <ul className="space-y-3">
-                    <li>
-                      <Link href="/stories" className="group flex items-center text-gray-600 hover:text-[#34a853] transition-colors">
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[#f0f9f2] text-[#34a853] group-hover:bg-[#34a853] group-hover:text-white transition-colors mr-3">
-                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                        <span className="font-medium">パブリックストーリー</span>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/dashboard/create" className="group flex items-center text-gray-600 hover:text-[#34a853] transition-colors">
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-[#f0f9f2] text-[#34a853] group-hover:bg-[#34a853] group-hover:text-white transition-colors mr-3">
-                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 4V20M20 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                        <span className="font-medium">新規ストーリー作成</span>
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              
-              {/* 統計カード（オプション） */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h3 className="text-md font-medium text-gray-900">統計</h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">作成したストーリー</span>
-                    <span className="font-medium text-gray-900">{stories ? stories.length : 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">公開ストーリー</span>
-                    <span className="font-medium text-gray-900">
-                      {stories ? stories.filter(story => story.metadata?.visibility === 'public').length : 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">マイストーリー</h1>
+              <Link
+                href="/dashboard/create"
+                className="inline-flex items-center px-4 py-2 bg-[#34a853] text-white text-sm font-medium rounded hover:bg-[#2d8f46] transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4V20M20 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                新規作成
+              </Link>
             </div>
             
-            {/* メインコンテンツ */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                  <h2 className="text-xl font-medium text-gray-900">マイストーリー</h2>
-                  <Link
-                    href="/dashboard/create"
-                    className="inline-flex items-center px-3 py-1.5 bg-[#34a853] text-white text-sm font-medium rounded-full hover:bg-[#2d8f46] transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 4V20M20 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    新しいストーリー
-                  </Link>
+            <div className="flex space-x-6 mb-6">
+              <button 
+                onClick={() => setFilterMode('all')}
+                className={`px-4 py-2 ${
+                  filterMode === 'all' 
+                    ? 'border-b-2 border-[#34a853] text-[#34a853] font-medium' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                すべて ({totalStories})
+              </button>
+              <button 
+                onClick={() => setFilterMode('public')}
+                className={`px-4 py-2 ${
+                  filterMode === 'public' 
+                    ? 'border-b-2 border-[#34a853] text-[#34a853] font-medium' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                公開中 ({publicStories})
+              </button>
+            </div>
+            
+            <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+              {filteredStories.length > 0 ? (
+                <StoryList stories={filteredStories} />
+              ) : (
+                <div className="py-12">
+                  <EmptyState />
                 </div>
-                
-                <div className="p-6">
-                  {/* ストーリーがない場合はEmptyState、ある場合はStoryListを表示 */}
-                  {stories && stories.length > 0 ? (
-                    <StoryList stories={stories} />
-                  ) : (
-                    <EmptyState />
-                  )}
-                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <div className="flex justify-between">
+              <Link
+                href="/stories"
+                className="text-[#34a853] hover:underline text-sm"
+              >
+                公開ストーリーを閲覧
+              </Link>
+              
+              <div className="text-sm text-gray-500">
+                合計: {totalStories}件のストーリー
               </div>
             </div>
           </div>
@@ -165,9 +161,9 @@ function DashboardContent() {
 export default function Dashboard() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-[#f9fafb]">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-2 border-t-[#34a853] border-gray-200 rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">読み込み中...</p>
         </div>
       </div>

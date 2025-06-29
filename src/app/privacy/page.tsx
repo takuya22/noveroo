@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import { Header } from '@/features/landing/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
+import Header from '@/components/Header';
 
 export default function PrivacyPage() {
   return (
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           
           <div className="bg-blue-50 p-4 rounded-lg mb-8">
             <p className="text-blue-800">
-              最終更新日: 2025年4月26日
+              最終更新日: 2025年6月28日
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
               <li>マーケティング活動、広告配信（ユーザーの設定に基づく）</li>
               <li>利用状況の分析、統計データの作成</li>
               <li>不正利用の検知、防止、セキュリティの確保</li>
-              <li>ストーリー生成回数の制限管理（ベータ版期間中は1日5回まで）</li>
+              <li>ストーリー生成回数の制限管理（ベータ版期間中は1日3回まで）</li>
               <li>有料サービス導入後の課金管理（今後予定）</li>
               <li>その他、本サービスの提供に付随する目的</li>
             </ul>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Story } from "@/utils/storyModel";
 
@@ -14,7 +14,7 @@ export const useStories = () => {
   const [error, setError] = useState('');
 
   // ストーリー一覧を取得する関数
-  const fetchStories = async () => {
+  const fetchStories = useCallback(async () => {
     if (!session) {
       setStories([]);
       return;
@@ -39,7 +39,7 @@ export const useStories = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   // セッションが変わったら読み込み
   useEffect(() => {
@@ -48,7 +48,7 @@ export const useStories = () => {
     } else {
       setStories([]);
     }
-  }, [session]);
+  }, [fetchStories, session]);
 
   return {
     stories,

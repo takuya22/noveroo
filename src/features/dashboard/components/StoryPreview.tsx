@@ -170,7 +170,7 @@ export default function StoryPreview({ story, onClose }: StoryPreviewProps) {
             <p 
               className={`text-gray-800 text-lg leading-relaxed mb-6 transition-opacity duration-1000 ${textAnimated ? 'opacity-100' : 'opacity-0'}`}
             >
-              {currentScene.text}
+              {currentScene.text[0].text}
             </p>
             
             {/* 選択肢 */}

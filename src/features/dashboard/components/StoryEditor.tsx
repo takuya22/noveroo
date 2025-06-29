@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Story, Scene, Choice, LearningPoint } from '@/utils/storyModel';
 import StoryPreview from './StoryPreview';
+import BgmSelector from './BgmSelector';
 import Image from 'next/image';
 
 interface StoryEditorProps {
@@ -23,7 +24,13 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
 
   // ストーリーの内容が変更されたときに状態を更新
   useEffect(() => {
-    setEditedStory(story);
+    // 常にクイズモードをtrueに設定
+    const updatedStory = {
+      ...story,
+      isQuizMode: true
+    };
+    
+    setEditedStory(updatedStory);
     
     // シーンをIDでマップ化して検索しやすくする
     const map: Record<string, Scene> = {};
@@ -221,8 +228,12 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
       id: newId,
       type: 'scene',
       background: 'default background',
-      text: '新しいシーンのテキスト',
-      text_en: 'New scene text',
+      text: [
+        { text: '新しいシーンのテキスト', speaker: '' }
+      ],
+      textEn: [
+        { text: 'New scene text', speaker: '' }
+      ],
       choices: [
         {
           text: '次へ',
@@ -306,9 +317,10 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
 
   // 変更を保存
   const handleSave = async () => {
-    // 最終的なストーリーデータを構築
+    // 最終的なストーリーデータを構築（isQuizModeを常にfalseに）
     const finalStory: Story = {
       ...editedStory,
+      isQuizMode: false,
       scenes: sceneOrder.map(id => scenesMap[id])
     };
     
@@ -319,10 +331,20 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
   const filteredScenes = searchTerm.trim() 
     ? sceneOrder.filter(id => {
         const scene = scenesMap[id];
+        // 配列型のテキストを検索できるように修正
+        const textContainsSearch = scene?.text?.some(quote => 
+          quote.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (quote.speaker && quote.speaker.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        const textEnContainsSearch = scene?.textEn?.some(quote => 
+          quote.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (quote.speaker && quote.speaker.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
         return (
           id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          scene?.text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          scene?.text_en?.toLowerCase().includes(searchTerm.toLowerCase())
+          textContainsSearch ||
+          textEnContainsSearch
         );
       })
     : sceneOrder;
@@ -410,7 +432,9 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               >
                 {sceneOrder.map(id => (
                   <option key={id} value={id}>
-                    {id} - {scenesMap[id]?.text?.substring(0, 30)}...
+                    {id} - {scenesMap[id]?.text && scenesMap[id]?.text.length > 0 
+                      ? scenesMap[id]?.text[0]?.text?.substring(0, 30)
+                      : ''}...
                   </option>
                 ))}
               </select>
@@ -440,6 +464,21 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                 </div>
               )}
             </div>
+            
+            {/* <div className="mb-4">
+              <div className="p-3 bg-[var(--primary-light)] rounded-lg">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--primary)]" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                  <span className="ml-2 font-medium text-[var(--primary)]">クイズモードが有効です</span>
+                </div>
+                <p className="mt-1 text-sm text-gray-700">
+                  このアプリではクイズモードのみをサポートしています。ストーリーを進めながら問題に答えて学ぶスタイルになります。
+                  各シーンで設定したクイズ問題を順番に解いていく形式です。
+                </p>
+              </div>
+            </div> */}
           </div>
         )}
 
@@ -504,7 +543,10 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                         )}
                       </div>
                       <p className="text-gray-600 text-xs truncate mt-1">
-                        {scenesMap[id]?.text?.substring(0, 40) || ''}...
+                        {scenesMap[id]?.text && scenesMap[id]?.text.length > 0 
+                          ? (scenesMap[id]?.text[0]?.speaker ? `(${scenesMap[id]?.text[0]?.speaker}) ` : '') + 
+                            scenesMap[id]?.text[0]?.text?.substring(0, 40)
+                          : ''}...
                       </p>
                     </li>
                   ))}
@@ -574,48 +616,105 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           テキスト（日本語）
                         </label>
-                        <textarea
-                          rows={5}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                          value={activeScene.text}
-                          onChange={(e) => updateScene(activeSceneId!, 'text', e.target.value)}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          テキスト（英語）
-                        </label>
-                        <textarea
-                          rows={5}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                          value={activeScene.text_en}
-                          onChange={(e) => updateScene(activeSceneId!, 'text_en', e.target.value)}
-                        />
-                      </div>
-                      
-                      {/* 選択肢編集 */}
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            選択肢
-                          </label>
-                          <button
-                            onClick={() => addChoice(activeSceneId!)}
-                            className="px-2 py-1 text-xs text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-dark)] transition-colors"
-                          >
-                            + 選択肢を追加
-                          </button>
-                        </div>
-                        
-                        {activeScene.choices && activeScene.choices.length > 0 ? (
-                          <div className="space-y-3">
-                            {activeScene.choices.map((choice, index) => (
-                              <div key={index} className="border border-gray-200 rounded-md p-3">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="text-sm font-medium text-gray-700">選択肢 {index + 1}</span>
+                        <div className="space-y-3">
+                          {activeScene.text && activeScene.text.map((quote, index) => (
+                            <div key={index} className="border border-gray-200 rounded-md p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    話者
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.speaker || ''}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.text];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        speaker: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="話者名"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    テキスト
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.text}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.text];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        text: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="セリフやナレーション"
+                                  />
+                                </div>
+                                <div className="flex justify-end">
                                   <button
-                                    onClick={() => removeChoice(activeSceneId!, index)}
+                                    onClick={() => {
+                                      const updatedQuotes = activeScene.text.filter((_, i) => i !== index);
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        text: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
                                     className="text-red-500 hover:text-red-700"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -623,52 +722,633 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                                     </svg>
                                   </button>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                      テキスト
-                                    </label>
-                                    <input
-                                      type="text"
-                                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                                      value={choice.text}
-                                      onChange={(e) => updateChoice(activeSceneId!, index, 'text', e.target.value)}
-                                    />
-                                  </div>
-                                  
-                                  <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                      次のシーン
-                                    </label>
-                                    <select
-                                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                                      value={choice.nextScene}
-                                      onChange={(e) => updateChoice(activeSceneId!, index, 'nextScene', e.target.value)}
-                                    >
-                                      {sceneOrder.map(id => (
-                                        <option key={id} value={id}>
-                                          {id} {id === activeSceneId && '(このシーン)'}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const newQuote = { text: '', speaker: '' };
+                              const updatedQuotes = [...(activeScene.text || []), newQuote];
+                              
+                              const updatedScene = {
+                                ...activeScene,
+                                text: updatedQuotes
+                              };
+                              
+                              const updatedMap = {
+                                ...scenesMap,
+                                [activeSceneId!]: updatedScene
+                              };
+                              
+                              setScenesMap(updatedMap);
+                              setEditedStory(prev => ({
+                                ...prev,
+                                scenes: sceneOrder.map(id => updatedMap[id])
+                              }));
+                              
+                              setUnsavedChanges(true);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-[var(--primary)] border border-dashed border-[var(--primary)] rounded-md hover:bg-[var(--primary-light)] hover:text-white transition-colors"
+                          >
+                            + テキスト/セリフを追加
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          テキスト（英語）
+                        </label>
+                        <div className="space-y-3">
+                          {activeScene.textEn && activeScene.textEn.map((quote, index) => (
+                            <div key={index} className="border border-gray-200 rounded-md p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    話者
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.speaker || ''}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.textEn];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        speaker: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="Speaker name"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs text-gray-500 mb-1">
+                                    テキスト
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                    value={quote.text}
+                                    onChange={(e) => {
+                                      const updatedQuotes = [...activeScene.textEn];
+                                      updatedQuotes[index] = {
+                                        ...updatedQuotes[index],
+                                        text: e.target.value
+                                      };
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    placeholder="Line or narration"
+                                  />
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      const updatedQuotes = activeScene.textEn.filter((_, i) => i !== index);
+                                      
+                                      const updatedScene = {
+                                        ...activeScene,
+                                        textEn: updatedQuotes
+                                      };
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
                                 </div>
                               </div>
-                            ))}
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const newQuote = { text: '', speaker: '' };
+                              const updatedQuotes = [...(activeScene.textEn || []), newQuote];
+                              
+                              const updatedScene = {
+                                ...activeScene,
+                                textEn: updatedQuotes
+                              };
+                              
+                              const updatedMap = {
+                                ...scenesMap,
+                                [activeSceneId!]: updatedScene
+                              };
+                              
+                              setScenesMap(updatedMap);
+                              setEditedStory(prev => ({
+                                ...prev,
+                                scenes: sceneOrder.map(id => updatedMap[id])
+                              }));
+                              
+                              setUnsavedChanges(true);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-[var(--primary)] border border-dashed border-[var(--primary)] rounded-md hover:bg-[var(--primary-light)] hover:text-white transition-colors"
+                          >
+                            + Add text/line
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* 常にクイズモード編集を表示 */}
+                      {true ? (
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              クイズ問題
+                            </label>
                           </div>
-                        ) : (
-                          <div className="text-center p-4 border border-dashed border-gray-300 rounded-md">
-                            <p className="text-gray-500 text-sm">選択肢がありません</p>
+                          
+                          <div className="border border-gray-200 rounded-md p-3 mb-3">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">
+                                問題文
+                              </label>
+                              <textarea
+                                rows={2}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                value={activeScene.quiz?.question || ''}
+                                onChange={(e) => {
+                                  // クイズオブジェクトがない場合は初期化
+                                  const updatedScene = { ...activeScene };
+                                  if (!updatedScene.quiz) {
+                                    updatedScene.quiz = {
+                                      question: e.target.value,
+                                      options: [],
+                                      explanation: ''
+                                    };
+                                  } else {
+                                    updatedScene.quiz = {
+                                      ...updatedScene.quiz,
+                                      question: e.target.value
+                                    };
+                                  }
+                                  
+                                  const updatedMap = {
+                                    ...scenesMap,
+                                    [activeSceneId!]: updatedScene
+                                  };
+                                  
+                                  setScenesMap(updatedMap);
+                                  
+                                  // 編集中のストーリーも更新
+                                  setEditedStory(prev => ({
+                                    ...prev,
+                                    scenes: sceneOrder.map(id => updatedMap[id])
+                                  }));
+                                  
+                                  setUnsavedChanges(true);
+                                }}
+                                placeholder="問題文を入力してください"
+                              />
+                            </div>
+                            
+                            <div className="mt-3">
+                              <label className="block text-xs text-gray-500 mb-1">
+                                問題の解説
+                              </label>
+                              <textarea
+                                rows={3}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                value={activeScene.quiz?.explanation || ''}
+                                onChange={(e) => {
+                                  // クイズオブジェクトがない場合は初期化
+                                  const updatedScene = { ...activeScene };
+                                  if (!updatedScene.quiz) {
+                                    updatedScene.quiz = {
+                                      question: '',
+                                      options: [],
+                                      explanation: e.target.value
+                                    };
+                                  } else {
+                                    updatedScene.quiz = {
+                                      ...updatedScene.quiz,
+                                      explanation: e.target.value
+                                    };
+                                  }
+                                  
+                                  const updatedMap = {
+                                    ...scenesMap,
+                                    [activeSceneId!]: updatedScene
+                                  };
+                                  
+                                  setScenesMap(updatedMap);
+                                  
+                                  // 編集中のストーリーも更新
+                                  setEditedStory(prev => ({
+                                    ...prev,
+                                    scenes: sceneOrder.map(id => updatedMap[id])
+                                  }));
+                                  
+                                  setUnsavedChanges(true);
+                                }}
+                                placeholder="問題の解説を入力してください"
+                              />
+                            </div>
+                            
+                            <div className="mt-3">
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs text-gray-500">
+                                  選択肢
+                                </label>
+                                <button
+                                  onClick={() => {
+                                    const updatedScene = { ...activeScene };
+                                    // クイズオブジェクトがない場合は初期化
+                                    if (!updatedScene.quiz) {
+                                      updatedScene.quiz = {
+                                        question: '',
+                                        options: [],
+                                        explanation: ''
+                                      };
+                                    }
+                                    
+                                    // 新しい選択肢を追加
+                                    updatedScene.quiz.options = [
+                                      ...(updatedScene.quiz.options || []),
+                                      { text: '', isCorrect: false, explanation: '' }
+                                    ];
+                                    
+                                    const updatedMap = {
+                                      ...scenesMap,
+                                      [activeSceneId!]: updatedScene
+                                    };
+                                    
+                                    setScenesMap(updatedMap);
+                                    
+                                    // 編集中のストーリーも更新
+                                    setEditedStory(prev => ({
+                                      ...prev,
+                                      scenes: sceneOrder.map(id => updatedMap[id])
+                                    }));
+                                    
+                                    setUnsavedChanges(true);
+                                  }}
+                                  className="px-2 py-1 text-xs text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-dark)] transition-colors"
+                                >
+                                  + 選択肢を追加
+                                </button>
+                              </div>
+                              
+                              {/* クイズの選択肢がある場合 */}
+                              {activeScene.quiz?.options && activeScene.quiz.options.length > 0 ? (
+                                <div className="space-y-3 mt-2">
+                                  {activeScene.quiz.options.map((option, index) => (
+                                    <div key={index} className="border border-gray-200 rounded-md p-3">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <div className="flex items-center">
+                                          <input
+                                            type="radio"
+                                            className="mr-2 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)]"
+                                            checked={option.isCorrect}
+                                            onChange={() => {
+                                              // 現在の選択肢を正解に、他の選択肢を不正解に
+                                              const updatedScene = { ...activeScene };
+                                              if (updatedScene.quiz && updatedScene.quiz.options) {
+                                                updatedScene.quiz.options = updatedScene.quiz.options.map((opt, i) => ({
+                                                  ...opt,
+                                                  isCorrect: i === index
+                                                }));
+                                                
+                                                const updatedMap = {
+                                                  ...scenesMap,
+                                                  [activeSceneId!]: updatedScene
+                                                };
+                                                
+                                                setScenesMap(updatedMap);
+                                                
+                                                // 編集中のストーリーも更新
+                                                setEditedStory(prev => ({
+                                                  ...prev,
+                                                  scenes: sceneOrder.map(id => updatedMap[id])
+                                                }));
+                                                
+                                                setUnsavedChanges(true);
+                                              }
+                                            }}
+                                          />
+                                          <span className="text-sm font-medium text-gray-700">
+                                            {option.isCorrect ? '正解' : '不正解'}
+                                          </span>
+                                        </div>
+                                        <button
+                                          onClick={() => {
+                                            // 選択肢を削除
+                                            const updatedScene = { ...activeScene };
+                                            if (updatedScene.quiz && updatedScene.quiz.options) {
+                                              updatedScene.quiz.options = updatedScene.quiz.options.filter((_, i) => i !== index);
+                                              
+                                              const updatedMap = {
+                                                ...scenesMap,
+                                                [activeSceneId!]: updatedScene
+                                              };
+                                              
+                                              setScenesMap(updatedMap);
+                                              
+                                              // 編集中のストーリーも更新
+                                              setEditedStory(prev => ({
+                                                ...prev,
+                                                scenes: sceneOrder.map(id => updatedMap[id])
+                                              }));
+                                              
+                                              setUnsavedChanges(true);
+                                            }
+                                          }}
+                                          className="text-red-500 hover:text-red-700"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                      
+                                      <div>
+                                        <label className="block text-xs text-gray-500 mb-1">
+                                          選択肢のテキスト
+                                        </label>
+                                        <input
+                                          type="text"
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                          value={option.text}
+                                          onChange={(e) => {
+                                            const updatedScene = { ...activeScene };
+                                            if (updatedScene.quiz && updatedScene.quiz.options) {
+                                              updatedScene.quiz.options = updatedScene.quiz.options.map((opt, i) => {
+                                                if (i === index) {
+                                                  return { ...opt, text: e.target.value };
+                                                }
+                                                return opt;
+                                              });
+                                              
+                                              const updatedMap = {
+                                                ...scenesMap,
+                                                [activeSceneId!]: updatedScene
+                                              };
+                                              
+                                              setScenesMap(updatedMap);
+                                              
+                                              // 編集中のストーリーも更新
+                                              setEditedStory(prev => ({
+                                                ...prev,
+                                                scenes: sceneOrder.map(id => updatedMap[id])
+                                              }));
+                                              
+                                              setUnsavedChanges(true);
+                                            }
+                                          }}
+                                          placeholder="選択肢のテキスト"
+                                        />
+                                      </div>
+                                      
+                                      <div className="mt-2">
+                                        <label className="block text-xs text-gray-500 mb-1">
+                                          選択肢の解説
+                                        </label>
+                                        <textarea
+                                          rows={2}
+                                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                          value={option.explanation || ''}
+                                          onChange={(e) => {
+                                            const updatedScene = { ...activeScene };
+                                            if (updatedScene.quiz && updatedScene.quiz.options) {
+                                              updatedScene.quiz.options = updatedScene.quiz.options.map((opt, i) => {
+                                                if (i === index) {
+                                                  return { ...opt, explanation: e.target.value };
+                                                }
+                                                return opt;
+                                              });
+                                              
+                                              const updatedMap = {
+                                                ...scenesMap,
+                                                [activeSceneId!]: updatedScene
+                                              };
+                                              
+                                              setScenesMap(updatedMap);
+                                              
+                                              // 編集中のストーリーも更新
+                                              setEditedStory(prev => ({
+                                                ...prev,
+                                                scenes: sceneOrder.map(id => updatedMap[id])
+                                              }));
+                                              
+                                              setUnsavedChanges(true);
+                                            }
+                                          }}
+                                          placeholder="この選択肢を選んだ場合の解説"
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center p-4 border border-dashed border-gray-300 rounded-md">
+                                  <p className="text-gray-500 text-sm">選択肢がありません</p>
+                                  <button
+                                    onClick={() => {
+                                      const updatedScene = { ...activeScene };
+                                      // クイズオブジェクトがない場合は初期化
+                                      if (!updatedScene.quiz) {
+                                        updatedScene.quiz = {
+                                          question: '',
+                                          options: [],
+                                          explanation: ''
+                                        };
+                                      }
+                                      
+                                      // 新しい選択肢を追加
+                                      updatedScene.quiz.options = [
+                                        ...(updatedScene.quiz.options || []),
+                                        { text: '', isCorrect: true, explanation: '' }
+                                      ];
+                                      
+                                      const updatedMap = {
+                                        ...scenesMap,
+                                        [activeSceneId!]: updatedScene
+                                      };
+                                      
+                                      setScenesMap(updatedMap);
+                                      
+                                      // 編集中のストーリーも更新
+                                      setEditedStory(prev => ({
+                                        ...prev,
+                                        scenes: sceneOrder.map(id => updatedMap[id])
+                                      }));
+                                      
+                                      setUnsavedChanges(true);
+                                    }}
+                                    className="mt-2 px-3 py-1 text-xs text-[var(--primary)] border border-[var(--primary)] rounded hover:bg-[var(--primary-light)] transition-colors"
+                                  >
+                                    + 選択肢を追加
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              次のシーン
+                            </label>
+                            <select
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                              value={activeScene.nextScene || ''}
+                              onChange={(e) => {
+                                const updatedScene = {
+                                  ...activeScene,
+                                  nextScene: e.target.value
+                                };
+                                
+                                const updatedMap = {
+                                  ...scenesMap,
+                                  [activeSceneId!]: updatedScene
+                                };
+                                
+                                setScenesMap(updatedMap);
+                                
+                                // 編集中のストーリーも更新
+                                setEditedStory(prev => ({
+                                  ...prev,
+                                  scenes: sceneOrder.map(id => updatedMap[id])
+                                }));
+                                
+                                setUnsavedChanges(true);
+                              }}
+                            >
+                              <option value="">次のシーンを選択</option>
+                              {sceneOrder.map(id => (
+                                id !== activeSceneId && (
+                                  <option key={id} value={id}>
+                                    {id}
+                                  </option>
+                                )
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              選択肢
+                            </label>
                             <button
                               onClick={() => addChoice(activeSceneId!)}
-                              className="mt-2 px-3 py-1 text-xs text-[var(--primary)] border border-[var(--primary)] rounded hover:bg-[var(--primary-light)] transition-colors"
+                              className="px-2 py-1 text-xs text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-dark)] transition-colors"
                             >
                               + 選択肢を追加
                             </button>
                           </div>
-                        )}
-                      </div>
+                          
+                          {activeScene?.choices && activeScene!.choices!.length > 0 ? (
+                            <div className="space-y-3">
+                              {activeScene!.choices!.map((choice, index) => (
+                                <div key={index} className="border border-gray-200 rounded-md p-3">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm font-medium text-gray-700">選択肢 {index + 1}</span>
+                                    <button
+                                      onClick={() => removeChoice(activeSceneId!, index)}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">
+                                        テキスト
+                                      </label>
+                                      <input
+                                        type="text"
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                        value={choice.text}
+                                        onChange={(e) => updateChoice(activeSceneId!, index, 'text', e.target.value)}
+                                      />
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">
+                                        次のシーン
+                                      </label>
+                                      <select
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                                        value={choice.nextScene}
+                                        onChange={(e) => updateChoice(activeSceneId!, index, 'nextScene', e.target.value)}
+                                      >
+                                        {sceneOrder.map(id => (
+                                          <option key={id} value={id}>
+                                            {id} {id === activeSceneId && '(このシーン)'}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center p-4 border border-dashed border-gray-300 rounded-md">
+                              <p className="text-gray-500 text-sm">選択肢がありません</p>
+                              <button
+                                onClick={() => addChoice(activeSceneId!)}
+                                className="mt-2 px-3 py-1 text-xs text-[var(--primary)] border border-[var(--primary)] rounded hover:bg-[var(--primary-light)] transition-colors"
+                              >
+                                + 選択肢を追加
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       
                       {/* 学習ポイント編集 */}
                       <div>
@@ -706,6 +1386,40 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                           </div>
                         </div>
                       </div>
+                      
+                      {/* BGM設定 */}
+                      <div className="mt-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            BGM設定
+                          </label>
+                        </div>
+                        
+                        <BgmSelector 
+                          selectedBgm={activeScene.sceneBgmType || null}
+                          onChange={(bgmType) => {
+                            const updatedScene = {
+                              ...activeScene,
+                              sceneBgmType: bgmType || undefined
+                            };
+                            
+                            const updatedMap = {
+                              ...scenesMap,
+                              [activeSceneId!]: updatedScene
+                            };
+                            
+                            setScenesMap(updatedMap);
+                            
+                            // 編集中のストーリーも更新
+                            setEditedStory(prev => ({
+                              ...prev,
+                              scenes: sceneOrder.map(id => updatedMap[id])
+                            }));
+                            
+                            setUnsavedChanges(true);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -733,7 +1447,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                 onChange={(e) => updateMetadata('visibility', e.target.value)}
               >
                 <option value="private">非公開（自分だけが閲覧可能）</option>
-                <option value="unlisted">限定公開（URLを知っている人が閲覧可能）</option>
+                {/* <option value="unlisted">限定公開（URLを知っている人が閲覧可能）</option> */}
                 <option value="public">公開（誰でも閲覧可能）</option>
               </select>
             </div>
@@ -827,7 +1541,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
               </span>
             )}
             
-            <button
+            {/* <button
               onClick={() => setShowPreview(true)}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)]"
             >
@@ -836,7 +1550,7 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
               プレビュー
-            </button>
+            </button> */}
           </div>
           
           <div>

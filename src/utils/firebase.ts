@@ -161,3 +161,25 @@ export async function getUserStories(userId: string, limitCount: number = 20): P
     throw new Error('ストーリー一覧の取得に失敗しました');
   }
 }
+
+/**
+ * 音声をFirebase Storageにアップロードする
+ * @param storyId ストーリーID
+ * @param audioData 音声データ（Base64エンコードされた文字列）
+ * @returns アップロードされた音声のURL
+ * @param base64Data Base64エンコードされた画像データ
+ * @param folderPath 保存先フォルダパス
+ * @param fileName ファイル名
+ * @returns アップロードされた画像のURL
+ */
+export async function uploadAudioToStorage(data: string | Uint8Array<ArrayBufferLike>, filePath: string, fileName: string): Promise<string> {
+  try {
+    const storageRef = ref(storage, `${filePath}/${fileName}_${new Date().getTime()}.mp3`);
+    await uploadBytes(storageRef, data instanceof Uint8Array ? data : new Uint8Array(Buffer.from(data, 'base64')));
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading audio to storage:', error);
+    throw new Error('音声のアップロードに失敗しました');
+  }
+}

@@ -20,7 +20,7 @@ export const CtaSection = () => {
             今すぐ始めてみませんか？
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-7 text-gray-600">
-            Noverooはベータ版期間中、1日5回まで無料でストーリーを生成できます。最新のAI技術の力で、あなたのアイデアを魅力的なノベルゲームに変えましょう。
+            Noverooはベータ版期間中、1日3回まで無料でストーリーを生成できます。最新のAI技術の力で、あなたのアイデアを魅力的なノベルゲームに変えましょう。
           </p>
           <p className="mx-auto mt-3 max-w-xl text-sm text-gray-500">
             <span className="font-medium">※</span> ベータ版期間終了後は一部機能が有料になる予定です

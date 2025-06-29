@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthContext } from '@/providers/AuthProvider';
 import StoryEditor from '@/features/dashboard/components/StoryEditor';
 import { Story } from '@/utils/storyModel';
-import Header from '@/features/common/components/Header';
+import Header from '@/components/Header';
 
 export default function EditStory() {
   const { loading, isAuthenticated } = useAuthContext();

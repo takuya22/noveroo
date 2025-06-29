@@ -155,7 +155,7 @@ interface Scene {
   background: string;         // 背景説明（画像生成用）
   characters?: Character[];   // 登場キャラクター
   text: string;               // シーンテキスト（日本語）
-  text_en: string;            // シーンテキスト（英語）
+  textEn: string;            // シーンテキスト（英語）
   choices?: Choice[];         // 選択肢
   sceneImageUrl?: string;     // シーン画像URL
   useGeneratedImage?: boolean; // 生成画像使用フラグ
@@ -416,7 +416,6 @@ export function AuthProvider({ children }) {
 
 ### 9.4 アクセシビリティ考慮事項
 - セマンティックなHTML要素の使用
-- キーボードナビゲーションのサポート
 - スクリーンリーダー対応
 - 十分なコントラスト比の確保
 

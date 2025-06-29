@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Header } from '@/features/landing/components/Header';
 import { Footer } from '@/features/landing/components/Footer';
+import Header from '@/components/Header';
 
 export default function TermsPage() {
   return (
@@ -18,7 +18,7 @@ export default function TermsPage() {
           
           <div className="bg-blue-50 p-4 rounded-lg mb-8">
             <p className="text-blue-800">
-              最終更新日: 2025年4月26日
+              最終更新日: 2025年6月28日
             </p>
           </div>
 
@@ -123,7 +123,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">9. 有料サービス</h2>
             <ol className="list-decimal pl-5 mb-4">
-              <li>本サービスは現在ベータ版として提供されており、ユーザーは1日5回までストーリーを無料で生成できます。当社は将来的に本サービスの一部または全部を有料化する予定です。</li>
+              <li>本サービスは現在ベータ版として提供されており、ユーザーは1日3回までストーリーを無料で生成できます。当社は将来的に本サービスの一部または全部を有料化する予定です。</li>
               <li>有料サービス導入後の利用料金、支払方法、その他の条件については、当社が別途定めるものとします。</li>
               <li>ユーザーは、有料サービスの利用に際して、当社が指定する支払方法により、利用料金を支払うものとします。</li>
               <li>利用料金の支払いが遅延した場合、ユーザーは年14.6%の割合による遅延損害金を当社に支払うものとします。</li>
@@ -194,7 +194,17 @@ export default function TermsPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">18. お問い合わせ窓口</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">18. クレジット表記</h2>
+            <p className="mb-4">
+              本サービスでは、以下の素材を使用しています。
+            </p>
+            <ul className="list-none pl-0 mb-4">
+              <li>音楽：魔王魂</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">19. お問い合わせ窓口</h2>
             <p className="mb-4">
               本規約に関するお問い合わせは、下記のメールアドレスまでお願いいたします。
             </p>
