@@ -4,8 +4,6 @@ import { JSX, SVGProps } from "react";
 
 export const Footer = () => {
   const productLinks = [
-    { name: '特徴', href: '#features' },
-    { name: 'サンプルゲーム', href: '#sample-games' },
     { name: '利用規約', href: '/terms' },
     { name: 'プライバシーポリシー', href: '/privacy' },
   ];

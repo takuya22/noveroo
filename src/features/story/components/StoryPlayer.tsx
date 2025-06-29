@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, ReactNode } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { Story, Scene, Choice, isSceneBgmCategory, EndingType } from '@/utils/storyModel';
 import LottieEndingAnimation from './LottieEndingAnimation';
 
@@ -125,9 +125,189 @@ export default function StoryPlayer({
   const scenesMap = useRef<Record<string, Scene>>({});
 
   // UI表示/非表示の切り替え (F11キーのような全画面表示)
-  const toggleUI = () => {
+  const toggleUI = useCallback(() => {
     setShowUI(!showUI);
-  };
+  }, [showUI]);
+
+  // 現在再生中の音声ファイルのインデックス
+  const [currentAudioIndex, setCurrentAudioIndex] = useState<number>(0);
+  
+  // テキストを一気に表示する
+  const skipTextAnimation = useCallback(() => {
+    if (!activeScene) return;
+    
+    const text = language === 'ja' ? activeScene.text : (activeScene.textEn || activeScene.text);
+    const fullText = text.map(quote => {
+      const speaker = quote.speaker ? `(${quote.speaker}) ` : '';
+      return speaker + quote.text;
+    }).join('\n');
+    const segments = parseTextWithSpeakers(fullText);
+    const allText = segments.map(segment => segment.text).join('');
+    
+    // 最後のセグメントを表示
+    if (segments.length > 0) {
+      const lastSegment = segments[segments.length - 1];
+      setCurrentSpeaker(lastSegment.speaker);
+      setCurrentSegmentIndex(segments.length - 1);
+    }
+    
+    // 音声が再生中の場合は一時停止
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    
+    setDisplayedText(allText);
+    setIsTyping(false);
+    setTextComplete(true);
+    setShowChoices(true);
+  }, [activeScene, language]);
+
+
+  
+  // 選択肢をクリックしたときの処理（従来の分岐タイプ用）
+  const handleChoiceClick = useCallback((choice: Choice) => {
+    if (!activeScene) return;
+    
+    // 選択効果音 (効果音がオンの場合)
+    if (sfxOn) {
+      // 選択肢クリック効果音を再生
+    }
+    
+    // 選択を記録
+    setPlayData(prev => ({
+      ...prev,
+      choices: [
+        ...prev.choices, 
+        {
+          sceneId: activeScene.id,
+          choiceText: choice.text,
+          timestamp: Date.now()
+        }
+      ],
+      completedScenes: [...prev.completedScenes, choice.nextScene]
+    }));
+    
+    // 履歴に追加
+    setHistory(prev => [...prev, { sceneId: choice.nextScene, choice: choice.text }]);
+    
+    // 次のシーンへ
+    setCurrentSceneId(choice.nextScene);
+  }, [activeScene, sfxOn]);
+  
+  // 次のシーンへ進む処理
+  const handleContinue = useCallback(() => {
+    if (!activeScene) return;
+    
+    // クイズモードで、クイズ回答後の場合、次のシーンへ進む
+    if (story.isQuizMode && activeScene.nextScene && quizSubmitted) {
+      // クイズの状態をリセット
+      setQuizSubmitted(false);
+      setSelectedOptionIndex(null);
+      setQuizResult(null);
+      
+      // 履歴に追加
+      setHistory(prev => [...prev, { sceneId: activeScene.nextScene || '', choice: '次へ' }]);
+      
+      // 次のシーンへ
+      setCurrentSceneId(activeScene.nextScene);
+      return;
+    }
+    
+    // 通常モードで、選択肢がない場合（ストーリー終了）
+    if (!story.isQuizMode && (!activeScene.choices || activeScene.choices.length === 0)) {
+      // ストーリー終了処理
+      setPlayData(prev => ({
+        ...prev,
+        endTime: Date.now(),
+        ...(story.isQuizMode && { correctAnswers: totalCorrect, totalQuestions: totalQuestions })
+      }));
+      
+      // シーンまたはストーリーにエンディングタイプがある場合はアニメーション表示
+      const endingType = activeScene.endingType;
+      if (endingType) {
+        setCurrentEndingType(endingType);
+        setShowEndingAnimation(true);
+        // エンディングアニメーションは自動で終了するので、ここではonCompleteやonCloseを呼び出さない
+        return;
+      }
+      
+      if (onComplete) {
+        onComplete(playData);
+      }
+      
+      if (onClose) {
+        onClose();
+      }
+      return;
+    }
+    
+    // 通常モードで、選択肢が1つだけの場合、自動的に次へ進む
+    if (!story.isQuizMode && activeScene.choices && activeScene.choices.length === 1) {
+      handleChoiceClick(activeScene.choices[0]);
+    }
+  }, [activeScene, story.isQuizMode, quizSubmitted, onComplete, onClose, totalCorrect, totalQuestions, playData, handleChoiceClick]);
+  
+  // シーンの音声を再生する
+  const playSceneSpeech = useCallback((scene: Scene) => {
+    console.log("音声再生開始:", scene?.sceneSpeechUrls);
+    if (!speechOn || !scene || !scene.sceneSpeechUrls || scene.sceneSpeechUrls.length === 0) {
+      return;
+    }
+    
+    // 現在のシーンを保存
+    currentSceneRef.current = scene;
+    
+    try {
+      // audioRef がなければ作成
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+      
+      // 以前の音声を停止
+      audioRef.current.pause();
+      
+      // 最初のインデックスから開始
+      setCurrentAudioIndex(0);
+      
+      // 新しい音声をセット
+      audioRef.current.src = scene.sceneSpeechUrls[0];
+      audioRef.current.load();
+      
+      // 音声再生終了時の処理
+      audioRef.current.onended = () => {
+        console.log("音声再生完了");
+        
+        // ローカル変数で次のインデックスを計算
+        const nextIndex = currentAudioIndex + 1;
+        console.log("次の音声インデックス:", nextIndex);
+        
+        // 次の音声ファイルがある場合は再生
+        if (currentSceneRef.current && 
+            currentSceneRef.current.sceneSpeechUrls && 
+            nextIndex < currentSceneRef.current.sceneSpeechUrls.length) {
+            
+          // インデックスを更新
+          setCurrentAudioIndex(nextIndex);
+          
+          // 次の音声を再生
+          if (audioRef.current) {
+            audioRef.current.src = currentSceneRef.current.sceneSpeechUrls[nextIndex];
+            audioRef.current.load();
+            audioRef.current.play().catch(err => {
+              console.error("次の音声再生エラー:", err);
+            });
+          }
+        }
+      };
+      
+      // 音声再生
+      audioRef.current.play().catch(err => {
+        console.error("音声再生エラー:", err);
+      });
+    } catch (error) {
+      console.error("音声再生設定エラー:", error);
+    }
+  }, [speechOn, currentAudioIndex]);
   
   // キーボードショートカット
   useEffect(() => {
@@ -167,10 +347,11 @@ export default function StoryPlayer({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isTyping, textComplete, activeScene, showHistory, showSettings]);
+  }, [isTyping, textComplete, activeScene, showHistory, showSettings, skipTextAnimation, handleContinue, toggleUI]);
   
   // シーンが初期化されたときに、テキストセグメントを解析
   useEffect(() => {
+    console.log("StoryPlayer useEffect called with story:", story);
     // シーンマップを構築
     const map: Record<string, Scene> = {};
     story.scenes.forEach(scene => {
@@ -223,6 +404,7 @@ export default function StoryPlayer({
     // トランジションエフェクト
     setTransition(true);
     setTimeout(() => {
+      console.log("シーン切り替え:", scene.id);
       setActiveScene(scene);
       setTextComplete(false);
       setShowChoices(false);
@@ -278,6 +460,7 @@ export default function StoryPlayer({
       };
       
       // 音声ナレーションの再生
+      console.log("音声ナレーションの再生:", scene.sceneSpeechUrls);
       if (scene.sceneSpeechUrls && scene.sceneSpeechUrls.length > 0 && speechOn) {
         playSceneSpeech(scene);
       }
@@ -303,7 +486,7 @@ export default function StoryPlayer({
       // let timeout: NodeJS.Timeout;
       // clearTimeout(timeout);
     };
-  }, [currentSceneId, language, autoMode, typingSpeed, sfxOn]);
+  }, [currentSceneId, language, autoMode, typingSpeed, sfxOn, speechOn, musicOn, handleContinue, playSceneSpeech]);
   
   // 現在の話者を更新
   const updateCurrentSpeaker = (position: number, segments: Array<{speaker: string, text: string}>) => {
@@ -323,36 +506,6 @@ export default function StoryPlayer({
   const playTypingSfx = () => {
     // 実際の効果音処理はここに実装
     // この例では処理だけを入れておく
-  };
-  
-  // テキストを一気に表示する
-  const skipTextAnimation = () => {
-    if (!activeScene) return;
-    
-    const text = language === 'ja' ? activeScene.text : (activeScene.textEn || activeScene.text);
-    const fullText = text.map(quote => {
-      const speaker = quote.speaker ? `(${quote.speaker}) ` : '';
-      return speaker + quote.text;
-    }).join('\n');
-    const segments = parseTextWithSpeakers(fullText);
-    const allText = segments.map(segment => segment.text).join('');
-    
-    // 最後のセグメントを表示
-    if (segments.length > 0) {
-      const lastSegment = segments[segments.length - 1];
-      setCurrentSpeaker(lastSegment.speaker);
-      setCurrentSegmentIndex(segments.length - 1);
-    }
-    
-    // 音声が再生中の場合は一時停止
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    
-    setDisplayedText(allText);
-    setIsTyping(false);
-    setTextComplete(true);
-    setShowChoices(true);
   };
   
   // クイズの選択肢をクリックしたときの処理
@@ -376,89 +529,6 @@ export default function StoryPlayer({
       correct: isCorrect,
       explanation: explanation
     });
-  };
-  
-  // 選択肢をクリックしたときの処理（従来の分岐タイプ用）
-  const handleChoiceClick = (choice: Choice) => {
-    if (!activeScene) return;
-    
-    // 選択効果音 (効果音がオンの場合)
-    if (sfxOn) {
-      // 選択肢クリック効果音を再生
-    }
-    
-    // 選択を記録
-    setPlayData(prev => ({
-      ...prev,
-      choices: [
-        ...prev.choices, 
-        {
-          sceneId: activeScene.id,
-          choiceText: choice.text,
-          timestamp: Date.now()
-        }
-      ],
-      completedScenes: [...prev.completedScenes, choice.nextScene]
-    }));
-    
-    // 履歴に追加
-    setHistory(prev => [...prev, { sceneId: choice.nextScene, choice: choice.text }]);
-    
-    // 次のシーンへ
-    setCurrentSceneId(choice.nextScene);
-  };
-  
-  // 次のシーンへ進む処理
-  const handleContinue = () => {
-    if (!activeScene) return;
-    
-    // クイズモードで、クイズ回答後の場合、次のシーンへ進む
-    if (story.isQuizMode && activeScene.nextScene && quizSubmitted) {
-      // クイズの状態をリセット
-      setQuizSubmitted(false);
-      setSelectedOptionIndex(null);
-      setQuizResult(null);
-      
-      // 履歴に追加
-      setHistory(prev => [...prev, { sceneId: activeScene.nextScene || '', choice: '次へ' }]);
-      
-      // 次のシーンへ
-      setCurrentSceneId(activeScene.nextScene);
-      return;
-    }
-    
-    // 通常モードで、選択肢がない場合（ストーリー終了）
-    if (!story.isQuizMode && (!activeScene.choices || activeScene.choices.length === 0)) {
-      // ストーリー終了処理
-      setPlayData(prev => ({
-        ...prev,
-        endTime: Date.now(),
-        ...(story.isQuizMode && { correctAnswers: totalCorrect, totalQuestions: totalQuestions })
-      }));
-      
-      // シーンまたはストーリーにエンディングタイプがある場合はアニメーション表示
-      const endingType = activeScene.endingType;
-      if (endingType) {
-        setCurrentEndingType(endingType);
-        setShowEndingAnimation(true);
-        // エンディングアニメーションは自動で終了するので、ここではonCompleteやonCloseを呼び出さない
-        return;
-      }
-      
-      if (onComplete) {
-        onComplete(playData);
-      }
-      
-      if (onClose) {
-        onClose();
-      }
-      return;
-    }
-    
-    // 通常モードで、選択肢が1つだけの場合、自動的に次へ進む
-    if (!story.isQuizMode && activeScene.choices && activeScene.choices.length === 1) {
-      handleChoiceClick(activeScene.choices[0]);
-    }
   };
   
   // 自動モードの切り替え
@@ -533,9 +603,6 @@ export default function StoryPlayer({
     }
   };
   
-  // 現在再生中の音声ファイルのインデックス
-  const [currentAudioIndex, setCurrentAudioIndex] = useState<number>(0);
-  
   // 現在のシーンオブジェクトをref で管理
   const currentSceneRef = useRef<Scene | null>(null);
   
@@ -586,68 +653,6 @@ export default function StoryPlayer({
     }
   };
   
-  // シーンの音声を再生する
-  const playSceneSpeech = (scene: Scene) => {
-    console.log("音声再生開始:", scene?.sceneSpeechUrls);
-    if (!speechOn || !scene || !scene.sceneSpeechUrls || scene.sceneSpeechUrls.length === 0) {
-      return;
-    }
-    
-    // 現在のシーンを保存
-    currentSceneRef.current = scene;
-    
-    try {
-      // audioRef がなければ作成
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      }
-      
-      // 以前の音声を停止
-      audioRef.current.pause();
-      
-      // 最初のインデックスから開始
-      setCurrentAudioIndex(0);
-      
-      // 新しい音声をセット
-      audioRef.current.src = scene.sceneSpeechUrls[0];
-      audioRef.current.load();
-      
-      // 音声再生終了時の処理
-      audioRef.current.onended = () => {
-        console.log("音声再生完了");
-        
-        // ローカル変数で次のインデックスを計算
-        const nextIndex = currentAudioIndex + 1;
-        console.log("次の音声インデックス:", nextIndex);
-        
-        // 次の音声ファイルがある場合は再生
-        if (currentSceneRef.current && 
-            currentSceneRef.current.sceneSpeechUrls && 
-            nextIndex < currentSceneRef.current.sceneSpeechUrls.length) {
-            
-          // インデックスを更新
-          setCurrentAudioIndex(nextIndex);
-          
-          // 次の音声を再生
-          if (audioRef.current) {
-            audioRef.current.src = currentSceneRef.current.sceneSpeechUrls[nextIndex];
-            audioRef.current.load();
-            audioRef.current.play().catch(err => {
-              console.error("次の音声再生エラー:", err);
-            });
-          }
-        }
-      };
-      
-      // 音声再生
-      audioRef.current.play().catch(err => {
-        console.error("音声再生エラー:", err);
-      });
-    } catch (error) {
-      console.error("音声再生設定エラー:", error);
-    }
-  };
-  
   // 学習ポイントの表示切り替え
   const toggleLearningPoint = () => {
     setShowLearningPoint(prev => !prev);
@@ -676,10 +681,13 @@ export default function StoryPlayer({
   
   // 背景スタイルの設定
   const getBackgroundStyle = () => {
+    console.log("getBackgroundStyle called");
     if (!activeScene) return {};
+    console.log("Active scene:", activeScene);
     
     // 生成された画像がある場合はそれを使用
     if (activeScene.sceneImageUrl) {
+      console.log("Using scene image URL:", activeScene.sceneImageUrl);
       return {
         backgroundImage: `url(${activeScene.sceneImageUrl})`,
         backgroundSize: 'cover',
@@ -688,6 +696,7 @@ export default function StoryPlayer({
         transition: 'filter 0.5s ease'
       };
     }
+    console.log("Using default gradient background");
     
     // デフォルトのグラデーション背景
     return {
@@ -734,12 +743,12 @@ export default function StoryPlayer({
       if (segmentEndPos <= displayedText.length) {
         // このセグメントは完全に表示されている
         result.push(
-          <>
+        <React.Fragment key={`segment-${i}`}>
           <span key={i} className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}>
             {segment.text}
           </span>
           <br />
-          </>
+        </React.Fragment>
         );
       } else if (segmentStartPos < displayedText.length) {
         // このセグメントは部分的に表示されている

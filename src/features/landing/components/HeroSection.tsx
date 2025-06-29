@@ -20,14 +20,23 @@ export const HeroSection = () => {
       
       <div className="mx-auto max-w-7xl px-6 pt-24 pb-16 sm:pt-32 lg:px-8 lg:pt-40 lg:pb-24">
         <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
-          <div className="w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-800 sm:text-5xl lg:text-6xl">
-              <span className="inline-block mb-2">AIでノベルゲームを</span>
-              <span className="inline-block text-[var(--primary)]">簡単に作成</span>
+          <div className="w-full mx-auto max-w-xl text-center lg:shrink-0 xl:max-w-2xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-800 sm:text-4xl lg:text-5xl">
+              <span className="inline-block mb-2">学んだ気になっているだけ</span>
+              <span className="inline-block text-[var(--primary)]">をシミュレーションで解決</span>
             </h1>
             <p className="relative mt-6 text-lg leading-7 text-gray-600 sm:max-w-md lg:max-w-none">
-              Noverooは、最新のAI技術を使って誰でも簡単にインタラクティブなシミュレーションゲームを作れるプラットフォームです。<span className="font-medium text-gray-800">学びながら楽しめる教材作り</span>、個人の創作活動、シニアの方の新しい表現方法として、幅広く活用できます。
+             YouTubeでの解説動画、ChatGPTを使った検索、オンライン研修...<br />
+            これらで「学んでいる」ように感じているけれど、
             </p>
+            <div className="border-1 rounded-2xl p-6 border-[var(--primary)] mt-6">
+              <p className="text-lg leading-7 text-gray-600">
+                💭 <span className='inline-block text-[var(--primary)] font-bold'>「なんとなくわかった」で終わっていませんか？</span>
+                  <span className='inline-block mt-1'>知識を得るだけでは、現場で使えるスキルにはなりません。<br />実務に活かせずに忘れ去られることがほとんどです。</span>
+                  <span className='inline-block mt-1'>AIが作るインタラクティブなストーリーで、知識を実際に「使う」体験を。</span>
+                  <span className='inline-block mt-1'>選択と結果を繰り返すことで、本当に使えるスキルが身に付きます。</span>
+              </p>
+            </div>
             {/* <p className="mt-3 text-sm font-medium text-[var(--primary)] bg-[var(--primary-light)] bg-opacity-20 inline-block px-3 py-1 rounded-full">
               ベータ版期間中は1日3回まで無料でストーリー生成ができます
             </p> */}

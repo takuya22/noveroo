@@ -25,9 +25,9 @@ const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// const credentialKey = Buffer.from(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY || '', 'base64').toString('utf-8') as any;
-// console.log('GCP Vertex AI credentials key:', credentialKey);
-const credentials = JSON.parse(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY!);
+const credentials = JSON.parse(
+  Buffer.from(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY_BASE64!, 'base64').toString('utf8')
+);
 // VertexAIの初期化
 const vertexAI = new VertexAI({
   project: process.env.GCP_PROJECT_ID,
@@ -39,7 +39,6 @@ const vertexAI = new VertexAI({
 
 // Stability AI APIの設定
 const STABILITY_API_KEY = process.env.STABILITY_API_KEY;
-// const STABILITY_API_ENDPOINT = 'https://api.stability.ai/v1/generation';
 const STABILITY_API_ENDPOINT = 'https://api.stability.ai/v2beta/stable-image/generate/core';
 
 /**
@@ -112,16 +111,8 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
                     type: SchemaType.STRING,
                     description: "キャラクターを英語で簡潔に記述。名前もあり。"
                   },
-                  position: {
-                    type: SchemaType.OBJECT,
-                    properties: {
-                      x: { type: SchemaType.NUMBER },
-                      y: { type: SchemaType.NUMBER }
-                    },
-                    required: ["x", "y"]
-                  }
                 },
-                required: ["id", "position"]
+                required: ["id"]
               }
             },
             text: {
@@ -382,7 +373,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
 ## 必須要素
 - 魅力的なタイトルと詳細な世界観説明
 - 10~25つのシーンによる分岐ストーリー
-- 各シーンに2-3の意味ある選択肢
+- 各シーンに2-3の意味ある選択肢 ※エンディング以外は必須にしてください
 - 選択による結果の違いが明確
 - 教育的で満足感のある複数の結末
 
@@ -400,7 +391,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       "sceneBgmType": "none", // BGMタイプ（例: 'none', 'default', 'ast_daily', 'calm_down', 'cafe', 'foreign_land', 'deserted_town', 'fantasy', '8bit', 'tutorial'）
       "endingType": "エンディングのタイプ（"happy" ,"bad", "true", "mystery", "normal", "instant-death"） 話の途中では設定しないでください",
       "characters": [
-        {"id": "キャラクターを英語で簡潔に記述。名前もあり。", "position": {"x": 50, "y": 20}}
+        {"id": "キャラクターを英語で簡潔に記述。名前もあり。"}
       ],
       "text": [
         {
@@ -436,10 +427,13 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
 
 
   try {
-    // ログ保存ディレクトリを作成
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
+    // ログ保存ディレクトリを作成（開発環境のみ）
+    let logDir;
+    if (process.env.NODE_ENV !== 'production') {
+      logDir = path.join(process.cwd(), 'logs');
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
     }
 
     // // Geminiモデルを使用
@@ -495,10 +489,13 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       }
       // JSON形式の部分を抽出
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      // ファイルに保存
-      const filePath = path.join(logDir, `story-generation-${Date.now()}.txt`);
-      // JSON部分をファイルに保存
-      fs.writeFileSync(filePath, text);
+      
+      // ファイルに保存（開発環境のみ）
+      if (logDir) {
+        const filePath = path.join(logDir, `story-generation-${Date.now()}.txt`);
+        fs.writeFileSync(filePath, text);
+      }
+      
       console.log('JSON match:', jsonMatch);
       if (jsonMatch) {
         console.log('JSON:', jsonMatch[0]);
@@ -622,13 +619,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
 
 export async function generateImageByImagen(prompt: string): Promise<string> {
   try {
-    console.log("Generating image with Imagen using prompt:", prompt);
-
-    // ログ保存ディレクトリを作成（デバッグ用）
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
 
     // 使用するモデルを設定
     const generativeModel = await vertexAI.preview.getGenerativeModel({
@@ -678,12 +668,6 @@ export async function generateImageByImagen(prompt: string): Promise<string> {
  */
 export async function generateImage(prompt: string): Promise<string> {
   try {
-    // ログ保存ディレクトリを作成（デバッグ用）
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
     const payload = {
       prompt: prompt,
       output_format: "webp",

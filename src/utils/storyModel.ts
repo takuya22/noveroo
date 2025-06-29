@@ -4,10 +4,6 @@
 
 export interface Character {
   id: string;
-  position: {
-    x: number;
-    y: number;
-  };
 }
 
 export interface Quote {

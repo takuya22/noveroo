@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           
           <div className="bg-blue-50 p-4 rounded-lg mb-8">
             <p className="text-blue-800">
-              最終更新日: 2025年4月26日
+              最終更新日: 2025年6月28日
             </p>
           </div>
 

@@ -2,7 +2,9 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import { uploadAudioToStorage } from './firebase';
 import { Quote } from './storyModel';
 
-const credentials = JSON.parse(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY!);
+const credentials = JSON.parse(
+  Buffer.from(process.env.GCP_VERTEX_AI_CREDENTIALS_KEY_BASE64!, 'base64').toString('utf8')
+);
 
 // クライアントの初期化
 const ttsClient = new TextToSpeechClient({
@@ -50,13 +52,11 @@ export async function generateSpeech(
           voice: {
             languageCode,
             name: voiceOptions.voiceName,
-            rate: voiceOptions.speakingRate,
-            pitch: voiceOptions.pitch,
           },
           audioConfig: {
             audioEncoding,
-            speakingRate,
-            pitch,
+            speakingRate: voiceOptions.speakingRate || speakingRate,
+            pitch: voiceOptions.pitch || pitch,
           },
         };
 
@@ -103,7 +103,7 @@ const getVoiceForCharacter = (speaker_type: string | undefined) => {
       pitch: 0,
     },
     'FEMALE': {
-      voiceName: 'ja-JP-Neural2-B',
+      voiceName: 'ja-JP-Standard-A',
       speakingRate: 1.0,
       pitch: 2
     },

@@ -50,7 +50,7 @@ export default function Header() {
   // if (type === 'landing') {
     const landingNavigation = [
       { name: 'ダッシュボード', href: '/dashboard' },
-      { name: 'ストーリー', href: '/stories' },
+      { name: 'パブリックストーリー', href: '/stories' },
       { name: '新規作成', href: '/dashboard/create' },
     ];
 

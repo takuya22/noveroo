@@ -32,7 +32,7 @@ function StoryCard({ story }: { story: Story }) {
       {/* タイトルと説明 */}
       <div className="flex-grow">
         <div className="flex items-center">
-          <Link href={`/stories/${story.id}`} className="text-base font-medium text-gray-900 hover:text-[#34a853] transition-colors">
+          <Link href={`/stories/${story.id}/play`} className="text-base font-medium text-gray-900 hover:text-[#34a853] transition-colors">
             {story.title}
           </Link>
           {isPublic && (
