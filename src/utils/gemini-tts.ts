@@ -103,7 +103,7 @@ const getVoiceForCharacter = (speaker_type: string | undefined) => {
       pitch: 0,
     },
     'FEMALE': {
-      voiceName: 'ja-JP-Neural-B',
+      voiceName: 'ja-JP-Neural2-B',
       speakingRate: 1.0,
       pitch: 2
     },
@@ -111,6 +111,11 @@ const getVoiceForCharacter = (speaker_type: string | undefined) => {
       voiceName: 'ja-JP-Neural2-D',
       speakingRate: 1.0,
       pitch: -1
+    },
+    'ENGLISH': {
+      voiceName: 'en-GB-Wavenet-A',
+      speakingRate: 1.0,
+      pitch: 0
     },
   };
 

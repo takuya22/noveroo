@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, ReactNode, useCallback } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, useCallback, useMemo } from 'react';
 import { Story, Scene, Choice, isSceneBgmCategory, EndingType } from '@/utils/storyModel';
 import LottieEndingAnimation from './LottieEndingAnimation';
 
@@ -214,7 +214,8 @@ export default function StoryPlayer({
     }
     
     // 通常モードで、選択肢がない場合（ストーリー終了）
-    if (!story.isQuizMode && (!activeScene.choices || activeScene.choices.length === 0)) {
+    if (activeScene.endingType ||
+        (activeScene.choices && activeScene.choices.length === 0)) {
       // ストーリー終了処理
       setPlayData(prev => ({
         ...prev,
@@ -288,19 +289,15 @@ export default function StoryPlayer({
             !currentSceneRef.current.sceneSpeechUrls || 
             index >= currentSceneRef.current.sceneSpeechUrls.length ||
             !audioRef.current) {
-          console.log("音声再生完了またはシーン変更");
           return;
         }
-        
-        console.log(`音声再生中: ${index + 1}/${currentSceneRef.current.sceneSpeechUrls.length}`);
-        
+
         // 新しい音声をセット
         audioRef.current.src = currentSceneRef.current.sceneSpeechUrls[index];
         audioRef.current.load();
         
         // 音声再生終了時の処理
         audioRef.current.onended = () => {
-          console.log(`音声${index + 1}再生完了`);
           // 次の音声を再生
           playAudioAtIndex(index + 1);
         };
@@ -368,7 +365,6 @@ export default function StoryPlayer({
   
   // シーンが初期化されたときに、テキストセグメントを解析
   useEffect(() => {
-    console.log("StoryPlayer useEffect called with story:", story);
     // シーンマップを構築
     const map: Record<string, Scene> = {};
     story.scenes.forEach(scene => {
@@ -421,7 +417,6 @@ export default function StoryPlayer({
     // トランジションエフェクト
     setTransition(true);
     setTimeout(() => {
-      console.log("シーン切り替え:", scene.id);
       setActiveScene(scene);
       setTextComplete(false);
       setShowChoices(false);
@@ -453,11 +448,7 @@ export default function StoryPlayer({
             
             // 現在の話者を更新
             updateCurrentSpeaker(i, segments);
-            
-            // タイプ効果音 (効果音がオンの場合)
-            if (sfxOn && i % 5 === 0) {
-              playTypingSfx();
-            }
+
             setTimeout(typeText, typingSpeed);
           } else {
             setIsTyping(false);
@@ -477,7 +468,6 @@ export default function StoryPlayer({
       };
       
       // 音声ナレーションの再生
-      console.log("音声ナレーションの再生:", scene.sceneSpeechUrls);
       if (scene.sceneSpeechUrls && scene.sceneSpeechUrls.length > 0 && speechOn) {
         playSceneSpeech(scene);
       }
@@ -518,13 +508,7 @@ export default function StoryPlayer({
       accumulatedLength += segment.text.length;
     }
   };
-  
-  // タイピング効果音を再生する関数
-  const playTypingSfx = () => {
-    // 実際の効果音処理はここに実装
-    // この例では処理だけを入れておく
-  };
-  
+
   // クイズの選択肢をクリックしたときの処理
   const handleQuizOptionClick = (index: number, isCorrect: boolean, explanation: string) => {
     if (quizSubmitted) return; // 既に回答済みなら何もしない
@@ -589,11 +573,7 @@ export default function StoryPlayer({
   const toggleMusic = () => {
     setMusicOn(prev => {
       const newState = !prev;
-      console.log("BGM切り替え:", newState ? "オン" : "オフ");
       if (newState) {
-        console.log("BGMをオンにしました");
-        console.log("現在のシーン:", activeScene);
-        console.log("シーンのBGMタイプ:", activeScene?.sceneBgmType);
         // BGMをオンにした場合、現在のシーンのBGMを再生
         if (activeScene && activeScene.sceneBgmType) {
           playSceneBgm(activeScene);
@@ -604,7 +584,6 @@ export default function StoryPlayer({
           bgmRef.current.pause();
         }
       }
-      // console.log("BGM状態:", newState ? "オン" : "オフ");
       return newState;
     });
   };
@@ -636,7 +615,6 @@ export default function StoryPlayer({
     if (!scene.sceneBgmType || !isSceneBgmCategory(scene.sceneBgmType)) {
       return;
     }
-    console.log("BGM再生開始:", scene.sceneBgmType);
     
     try {
       // BGM用のAudio要素がなければ作成
@@ -654,7 +632,6 @@ export default function StoryPlayer({
       // 新しいBGMの設定
       const sceneBgmUrl = "https://firebasestorage.googleapis.com/v0/b/storylearning-648a6.firebasestorage.app/o/bgms%2F" + scene.sceneBgmType + ".mp3?alt=media";
       bgmRef.current.src = sceneBgmUrl;
-      console.log("BGM URL:", bgmRef.current.src);
       bgmRef.current.volume = 0.2; // BGMのボリュームは少し小さめに
       bgmRef.current.load();
       
@@ -705,7 +682,7 @@ export default function StoryPlayer({
   };
   
   // 背景スタイルの設定
-  const getBackgroundStyle = () => {
+  const getBackgroundStyle = useMemo(() => {
     if (!activeScene) return {};
     
     // 生成された画像がある場合はそれを使用
@@ -726,10 +703,10 @@ export default function StoryPlayer({
         : 'linear-gradient(135deg, rgba(176, 224, 255, 0.8) 0%, rgba(218, 249, 255, 0.9) 100%)',
       transition: 'background 0.5s ease'
     };
-  };
-  
+  }, [activeScene, nightMode]);
+
   // テキストサイズに基づいたクラス名を取得
-  const getTextSizeClass = () => {
+  const getTextSizeClass = useMemo(() => {
     switch (textSize) {
       case 'small': return 'text-base';
       case 'medium': return 'text-lg';
@@ -737,10 +714,9 @@ export default function StoryPlayer({
       case 'xlarge': return 'text-2xl';
       default: return 'text-lg';
     }
-  };
+  }, [textSize]);
   
-  // テキストを表示用に変換
-  const renderDisplayedText = (): ReactNode => {
+  const renderedText = useMemo((): ReactNode => {
     // テキストセグメントがない場合は単純に表示
     if (textSegments.length === 0) {
       return displayedText;
@@ -764,19 +740,25 @@ export default function StoryPlayer({
       if (segmentEndPos <= displayedText.length) {
         // このセグメントは完全に表示されている
         result.push(
-        <React.Fragment key={`segment-${i}`}>
-          <span key={i} className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}>
-            {segment.text}
-          </span>
-          <br />
-        </React.Fragment>
+          <React.Fragment key={`segment-${i}`}>
+            <span 
+              key={i} 
+              className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}
+            >
+              {segment.text}
+            </span>
+            <br />
+          </React.Fragment>
         );
       } else if (segmentStartPos < displayedText.length) {
         // このセグメントは部分的に表示されている
         const visiblePart = segment.text.substring(0, displayedText.length - segmentStartPos);
         
         result.push(
-          <span key={i} className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}>
+          <span 
+            key={i} 
+            className={`segment-text ${i === currentSegmentIndex ? 'current-segment' : ''}`}
+          >
             {visiblePart}
           </span>
         );
@@ -786,8 +768,8 @@ export default function StoryPlayer({
     }
     
     return result;
-  };
-  
+  }, [displayedText, textSegments, currentSegmentIndex]);
+
   if (!activeScene) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
@@ -1231,7 +1213,7 @@ export default function StoryPlayer({
       {/* 背景エリア */}
       <div 
         className="relative w-full h-full min-h-screen flex flex-col"
-        style={getBackgroundStyle()}
+        style={getBackgroundStyle}
       >
         {/* クイズモードの場合、進捗状況表示 */}
         {story.isQuizMode && (
@@ -1268,8 +1250,8 @@ export default function StoryPlayer({
             )}
             
             {/* テキスト - セグメントごとに表示 - 固定高さを設定し、スクロール可能に */}
-            <div className={`${getTextSizeClass()} leading-relaxed ${nightMode ? 'text-gray-100' : 'text-gray-800'} text-shadow-sm max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar whitespace-pre-line md:whitespace-normal`}>
-              {renderDisplayedText()}
+            <div className={`${getTextSizeClass} leading-relaxed ${nightMode ? 'text-gray-100' : 'text-gray-800'} text-shadow-sm max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar whitespace-pre-line md:whitespace-normal`}>
+              {renderedText}
               {isTyping && <span className="animate-pulse ml-0.5">|</span>}
             </div>
             
@@ -1345,7 +1327,7 @@ export default function StoryPlayer({
                       } text-xs flex items-center justify-center font-bold`}>
                         {String.fromCharCode(65 + index)} {/* A, B, C, ... */}
                       </span>
-                      <span className={getTextSizeClass()}>{option.text}</span>
+                      <span className={getTextSizeClass}>{option.text}</span>
                     </div>
                   </button>
                 ))}
@@ -1418,7 +1400,7 @@ export default function StoryPlayer({
                     } text-xs flex items-center justify-center font-bold`}>
                       {index + 1}
                     </span>
-                    <span className={getTextSizeClass()}>{choice.text}</span>
+                    <span className={getTextSizeClass}>{choice.text}</span>
                   </div>
                 </button>
               ))}
@@ -1522,7 +1504,7 @@ export default function StoryPlayer({
           font-weight: 500;
         }
         .segment-text {
-          transition: all 0.2s ease;
+          transition: none;
         }
         
         /* カスタムスクロールバースタイル */

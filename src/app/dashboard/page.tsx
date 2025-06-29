@@ -61,7 +61,12 @@ function DashboardContent() {
     filterMode === 'all' 
       ? stories 
       : stories.filter(story => story.metadata?.visibility === 'public')
-  ) : [];
+  ).sort((a, b) => {
+    // 作成日順に並び替え（新しい順）
+    const aDate = a.metadata?.createdAt ? new Date(a.metadata.createdAt as Date) : new Date(0);
+    const bDate = b.metadata?.createdAt ? new Date(b.metadata.createdAt as Date) : new Date(0);
+    return bDate.getTime() - aDate.getTime();
+  }) : [];
 
   // 以下は認証済みユーザー向けの表示内容
   return (

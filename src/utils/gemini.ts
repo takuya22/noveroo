@@ -125,12 +125,16 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
                     type: SchemaType.STRING,
                     description: "ナレーションやキャラクター名"
                   },
+                  speaker_type: {
+                    type: SchemaType.STRING,
+                    description: "NARRATOR/MALE/FEMALE/ENGLISH"
+                  },
                   text: {
                     type: SchemaType.STRING,
                     description: "シーンのテキスト内容（日本語）やセリフ"
                   }
                 },
-                required: ["speaker", "text"]
+                required: ["speaker", "speaker_type", "text"]
               }
             },
             textEn: {
@@ -143,10 +147,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
                     type: SchemaType.STRING,
                     description: "ナレーションやキャラクター名"
                   },
-                  speaker_type: {
-                    type: SchemaType.STRING,
-                    description: "NARRATOR/MALE/FEMALE"
-                  },
                   text: {
                     type: SchemaType.STRING,
                     description: "シーンのテキスト内容（英語）やセリフ"
@@ -157,7 +157,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
             },
             choices: {
               type: SchemaType.ARRAY,
-              description: "選択肢配列（エンディングのシーン以外は必須）",
+              description: "選択肢配列（エンディングのシーンは空）",
               items: {
                 type: SchemaType.OBJECT,
                 properties: {
@@ -174,106 +174,12 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
               }
             },
           },
-          required: ["id", "type", "background", "characters", "text", "textEn"]
+          required: ["id", "type", "background", "characters", "text", "textEn", "choices"]
         }
       }
     },
     required: ["title", "description", "initialScene", "isQuizMode", "scenes"]
   };
-
-//   const storySchema = {
-//   type: "object",
-//   properties: {
-//     title: {
-//       type: "string",
-//       description: "魅力的なゲームタイトル"
-//     },
-//     description: {
-//       type: "string",
-//       description: "ゲームの詳細説明（世界観、プレイヤーの役割、学習目標を含む）"
-//     },
-//     initialScene: {
-//       type: "string",
-//       description: "最初のシーンのID(startなど)"
-//     },
-//     isQuizMode: {
-//       type: "boolean",
-//       description: "クイズモードかどうか"
-//     },
-//     scenes: {
-//       type: "array",
-//       description: "ストーリーシーンの配列",
-//       items: {
-//         type: "object",
-//         properties: {
-//           id: {
-//             type: "string",
-//             description: "シーンの一意識別子"
-//           },
-//           type: {
-//             type: "string",
-//             description: "シーンのタイプ"
-//           },
-//           background: {
-//             type: "string",
-//             description: "詳細な背景描写を英語で（atmosphere, lighting, environmentを含める）"
-//           },
-//           characters: {
-//             type: "array",
-//             description: "登場キャラクター",
-//             items: {
-//               type: "object",
-//               properties: {
-//                 id: {
-//                   type: "string",
-//                   description: "キャラクターを英語で簡潔に記述。名前もあり。"
-//                 },
-//                 position: {
-//                   type: "object",
-//                   properties: {
-//                     x: { type: "number" },
-//                     y: { type: "number" }
-//                   },
-//                   required: ["x", "y"]
-//                 }
-//               },
-//               required: ["id", "position"]
-//             }
-//           },
-//           text: {
-//             type: "string",
-//             description: "シーンのテキスト内容（日本語）（シーンの説明とキャラクターのセリフを含む、ナレーションや対話形式で、ナレーションなら（ナレーション）、キャラクターなら（キャラクター名）を先頭につける）"
-//           },
-//           textEn: {
-//             type: "string",
-//             description: "シーンのテキスト内容（英語）"
-//           },
-//           choices: {
-//             type: "array",
-//             description: "選択肢配列",
-//             items: {
-//               type: "object",
-//               properties: {
-//                 text: {
-//                   type: "string",
-//                   description: "選択肢のテキスト（日本語）"
-//                 },
-//                 nextScene: {
-//                   type: "string",
-//                   description: "選択肢を選んだ場合の次のシーンID"
-//                 }
-//               },
-//               required: ["text", "nextScene"]
-//             }
-//           }
-//         },
-//         required: ["id", "type", "background", "characters", "text", "textEn"]
-//       }
-//     }
-//   },
-//   required: ["title", "description", "initialScene", "isQuizMode", "scenes"]
-// };
-
   
   if (quizMode) {
     // クイズモード用のプロンプト
@@ -396,7 +302,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       "text": [
         {
           "speaker": "ナレーション、キャラクター名など",
-          "speaker_type": "NARRATOR/MALE/FEMALE",
+          "speaker_type": "NARRATOR/MALE/FEMALE/ENGLISH",
           "text": "シーンのテキスト内容（日本語）やセリフ"
         }
       ],
@@ -436,22 +342,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       }
     }
 
-    // // Geminiモデルを使用
-    // const result = await genAI.models.generateContent({
-    //   model: "gemini-2.5-pro",
-    //   contents: prompt,
-    //   config: {
-    //     responseModalities: ["text"],
-    //     responseSchema: storySchema,
-    //     // temperature: 0.8,
-    //     // maxOutputTokens: 8192,
-    //     temperature: 0.9, // 創造性を高める
-    //     maxOutputTokens: 16384, // 出力トークン数を増加
-    //     topP: 0.95,
-    //     topK: 40
-    //   }
-    // });
-
     const model = await vertexAI.preview.getGenerativeModel({
       model: "gemini-2.5-pro",
     });
@@ -467,7 +357,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       }
     });
 
-    console.log('Executing story generation request...');
     if (!result.response.candidates || result.response.candidates.length === 0) {
       throw new Error('No candidates were returned by the Gemini API');
     }
@@ -475,8 +364,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
     const response = result.response.candidates[0];
     let allScenes = [] as Scene[];
     let baseStoryData;
-
-    console.log('Story generation response:', response);
 
     if (!response.content || !response.content.parts) {
       throw new Error('Invalid response format from Gemini API');
@@ -496,9 +383,7 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
         fs.writeFileSync(filePath, text);
       }
       
-      console.log('JSON match:', jsonMatch);
       if (jsonMatch) {
-        console.log('JSON:', jsonMatch[0]);
         // 前処理：一般的な問題を修正
         const jsonText = jsonMatch[0].trim()
         // 引用符の周りの空白を除去（誤ったエスケープを防ぐ）
@@ -528,7 +413,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
     if (!baseStoryData) {
       throw new Error('有効なJSONが生成されませんでした');
     }
-    console.log('Base game data:', baseStoryData);
 
     // 学習ポイントの追加（オプション）
     try {
@@ -588,7 +472,6 @@ export async function generateStory(theme: string, options: Options = {}, quizMo
       // JSON形式の部分を抽出
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        // console.log('JSON:', jsonMatch[0]);
         const supplyData = JSON.parse(jsonMatch[0].trim());
   
         // シーンに学びポイントを追加
@@ -634,20 +517,16 @@ export async function generateImageByImagen(prompt: string): Promise<string> {
     });
 
     const base64Image = result.response.candidates![0].content.parts[0].text;
-    console.log("Image generation response:", result.response);
 
     if (!base64Image) {
       throw new Error('生成された画像のBase64データが見つかりません');
     }
-    
-    console.log("Successfully generated image with Stability AI");
     
     // プロンプトの短縮版を作成 (ファイル名用)
     const shortPrompt = prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt;
     
     // Firebase Storageに画像をアップロード
     const imageUrl = await uploadImageToStorage(base64Image, 'generated', shortPrompt);
-    console.log("Image uploaded to storage:", imageUrl);
     
     return imageUrl;
   }
@@ -686,52 +565,14 @@ export async function generateImage(prompt: string): Promise<string> {
       },
     },
   );
-
-    console.log("Successfully generated image with Stability AI");
     
     // プロンプトの短縮版を作成 (ファイル名用)
     const shortPrompt = prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt;
     
     // Firebase Storageに画像をアップロード
     const imageUrl = await uploadBufferToStorage(response.data, 'generated', shortPrompt);
-    console.log("Image uploaded to storage:", imageUrl);
     
     return imageUrl;
-    
-    // // デバッグ用にレスポンスをログに保存
-    // const timestamp = Date.now();
-    // const logFilePath = path.join(logDir, `stability-response-${timestamp}.json`);
-    // fs.writeFileSync(logFilePath, JSON.stringify(responseData, null, 2));
-    
-    // // レスポンスが正常でない場合はエラーを投げる
-    // if (!response.ok) {
-    //   console.error("API Error:", responseData);
-    //   throw new Error(`Stability AI API エラー: ${responseData.message || '不明なエラー'}`);
-    // }
-
-    // // 画像データの取得（Base64形式）
-    // if (!responseData.artifacts || !Array.isArray(responseData.artifacts) || responseData.artifacts.length === 0) {
-    //   throw new Error('レスポンスに有効な画像データが含まれていません');
-    // }
-
-    // // 最初の画像を使用
-    // const image = responseData.artifacts[0];
-    // const base64Image = image.base64;
-    
-    // if (!base64Image) {
-    //   throw new Error('生成された画像のBase64データが見つかりません');
-    // }
-    
-    // console.log("Successfully generated image with Stability AI");
-    
-    // // プロンプトの短縮版を作成 (ファイル名用)
-    // const shortPrompt = prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt;
-    
-    // // Firebase Storageに画像をアップロード
-    // const imageUrl = await uploadImageToStorage(base64Image, 'generated', shortPrompt);
-    // console.log("Image uploaded to storage:", imageUrl);
-    
-    // return imageUrl;
   } catch (error: unknown) {
     console.error('Error generating image with Stability AI:', error instanceof Error ? error.message : '不明なエラー');
     

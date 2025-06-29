@@ -317,10 +317,10 @@ export default function StoryEditor({ story, onSave, isSaving }: StoryEditorProp
 
   // 変更を保存
   const handleSave = async () => {
-    // 最終的なストーリーデータを構築（isQuizModeを常にtrueに）
+    // 最終的なストーリーデータを構築（isQuizModeを常にfalseに）
     const finalStory: Story = {
       ...editedStory,
-      isQuizMode: true,
+      isQuizMode: false,
       scenes: sceneOrder.map(id => scenesMap[id])
     };
     
