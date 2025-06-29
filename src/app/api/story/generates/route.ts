@@ -73,9 +73,9 @@ export async function POST(req: NextRequest) {
     // 画像生成が有効な場合
     if (generateImages && storyData && storyData.scenes) {
       // シーン画像を生成（最初の3シーンのみ、リソース節約のため）
-      const processScenes = storyData.scenes.slice(0, 3);
+      // const processScenes = storyData.scenes.slice(0, 3);
 
-      await Promise.all(processScenes.map(async (scene) => {
+      await Promise.all(storyData.scenes.map(async (scene) => {
         try {
           // 英語のテキストと背景を使って画像プロンプトを作成
           const characterDescriptions = scene.characters && scene.characters.length > 0

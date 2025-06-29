@@ -94,7 +94,7 @@ export default function Header() {
                     : 'text-gray-600 hover:text-[#34a853] hover:bg-[#f0f9f2]'
                 }`}
               >
-                ストーリー
+                パブリックストーリー
               </Link>
               <Link 
                 href="/dashboard/create" 

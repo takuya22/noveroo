@@ -40,7 +40,7 @@ export const HeroSection = () => {
             {/* <p className="mt-3 text-sm font-medium text-[var(--primary)] bg-[var(--primary-light)] bg-opacity-20 inline-block px-3 py-1 rounded-full">
               ベータ版期間中は1日3回まで無料でストーリー生成ができます
             </p> */}
-            <div className="mt-12 flex items-center gap-x-5">
+            <div className="mt-12 flex items-center justify-center gap-x-5">
               <PrimaryButton 
                 className="rounded-md px-6 py-3 text-base font-medium shadow"
                 onClick={() => setAuthModalOpen(true)}

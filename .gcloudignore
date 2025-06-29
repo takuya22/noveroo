@@ -1,0 +1,39 @@
+# .gcloudignore
+
+# Gitの無視ファイル
+.git
+.gitignore
+
+# Node.js関連
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ビルドディレクトリ
+.next/
+out/
+
+# ローカル開発環境
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ログファイル
+logs/
+*.log
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# テスト関連
+__tests__/
+coverage/
+
+# その他
+README.md
+LICENSE
+*.md

@@ -1,0 +1,29 @@
+steps:
+  # コンテナイメージをビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/noveroo', '.']
+
+  # イメージをContainer Registryにプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/noveroo']
+
+  # Cloud Runにデプロイ
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'noveroo'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/noveroo'
+      - '--region'
+      - 'asia-northeast1'  # 東京リージョン
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'  # 公開アクセスを許可
+      - '--memory'
+      - '1Gi'  # メモリ割り当て
+
+# ビルドしたイメージを保存
+images:
+  - 'gcr.io/$PROJECT_ID/noveroo'

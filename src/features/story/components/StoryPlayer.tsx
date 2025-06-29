@@ -130,7 +130,7 @@ export default function StoryPlayer({
   }, [showUI]);
 
   // 現在再生中の音声ファイルのインデックス
-  const [currentAudioIndex, setCurrentAudioIndex] = useState<number>(0);
+  const [currentAudioIndex, ] = useState<number>(0);
   
   // テキストを一気に表示する
   const skipTextAnimation = useCallback(() => {
@@ -227,6 +227,10 @@ export default function StoryPlayer({
       if (endingType) {
         setCurrentEndingType(endingType);
         setShowEndingAnimation(true);
+        // 音声が再生中の場合は停止
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         // エンディングアニメーションは自動で終了するので、ここではonCompleteやonCloseを呼び出さない
         return;
       }
@@ -249,7 +253,6 @@ export default function StoryPlayer({
   
   // シーンの音声を再生する
   const playSceneSpeech = useCallback((scene: Scene) => {
-    console.log("音声再生開始:", scene?.sceneSpeechUrls);
     if (!speechOn || !scene || !scene.sceneSpeechUrls || scene.sceneSpeechUrls.length === 0) {
       return;
     }
@@ -262,48 +265,62 @@ export default function StoryPlayer({
       if (!audioRef.current) {
         audioRef.current = new Audio();
       }
-      
-      // 以前の音声を停止
-      audioRef.current.pause();
-      
-      // 最初のインデックスから開始
-      setCurrentAudioIndex(0);
-      
-      // 新しい音声をセット
-      audioRef.current.src = scene.sceneSpeechUrls[0];
-      audioRef.current.load();
-      
-      // 音声再生終了時の処理
-      audioRef.current.onended = () => {
-        console.log("音声再生完了");
-        
-        // ローカル変数で次のインデックスを計算
-        const nextIndex = currentAudioIndex + 1;
-        console.log("次の音声インデックス:", nextIndex);
-        
-        // 次の音声ファイルがある場合は再生
-        if (currentSceneRef.current && 
-            currentSceneRef.current.sceneSpeechUrls && 
-            nextIndex < currentSceneRef.current.sceneSpeechUrls.length) {
-            
-          // インデックスを更新
-          setCurrentAudioIndex(nextIndex);
-          
-          // 次の音声を再生
-          if (audioRef.current) {
-            audioRef.current.src = currentSceneRef.current.sceneSpeechUrls[nextIndex];
-            audioRef.current.load();
-            audioRef.current.play().catch(err => {
-              console.error("次の音声再生エラー:", err);
-            });
+    
+      // 以前の音声を安全に停止
+      const stopCurrentAudio = () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          try {
+            audioRef.current.pause();
+            // 一度pauseした後、currentTimeをリセット
+            audioRef.current.currentTime = 0;
+          } catch (error) {
+            console.warn("音声停止中にエラー:", error);
           }
         }
       };
-      
-      // 音声再生
-      audioRef.current.play().catch(err => {
-        console.error("音声再生エラー:", err);
-      });
+
+      // 以前の音声を停止
+      stopCurrentAudio();
+
+      // 音声を順次再生する関数
+      const playAudioAtIndex = (index: number) => {
+        if (!currentSceneRef.current || 
+            !currentSceneRef.current.sceneSpeechUrls || 
+            index >= currentSceneRef.current.sceneSpeechUrls.length ||
+            !audioRef.current) {
+          console.log("音声再生完了またはシーン変更");
+          return;
+        }
+        
+        console.log(`音声再生中: ${index + 1}/${currentSceneRef.current.sceneSpeechUrls.length}`);
+        
+        // 新しい音声をセット
+        audioRef.current.src = currentSceneRef.current.sceneSpeechUrls[index];
+        audioRef.current.load();
+        
+        // 音声再生終了時の処理
+        audioRef.current.onended = () => {
+          console.log(`音声${index + 1}再生完了`);
+          // 次の音声を再生
+          playAudioAtIndex(index + 1);
+        };
+        
+        // エラーハンドリング
+        audioRef.current.onerror = (error) => {
+          console.error(`音声${index + 1}再生エラー:`, error);
+          // エラーが発生した場合も次の音声に進む
+          playAudioAtIndex(index + 1);
+        };
+        
+        // 音声再生
+        audioRef.current.play().catch(err => {
+          console.error(`音声${index + 1}再生エラー:`, err);
+          // 再生エラーの場合も次の音声に進む
+          playAudioAtIndex(index + 1);
+        });
+      };
+
+      playAudioAtIndex(0); // 最初の音声から開始
     } catch (error) {
       console.error("音声再生設定エラー:", error);
     }
@@ -554,6 +571,14 @@ export default function StoryPlayer({
     if (onComplete) {
       onComplete(playData);
     }
+
+    // BGMと音声を停止
+    if (bgmRef.current) {
+      bgmRef.current.pause();
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
     
     if (onClose) {
       onClose();
@@ -681,13 +706,10 @@ export default function StoryPlayer({
   
   // 背景スタイルの設定
   const getBackgroundStyle = () => {
-    console.log("getBackgroundStyle called");
     if (!activeScene) return {};
-    console.log("Active scene:", activeScene);
     
     // 生成された画像がある場合はそれを使用
     if (activeScene.sceneImageUrl) {
-      console.log("Using scene image URL:", activeScene.sceneImageUrl);
       return {
         backgroundImage: `url(${activeScene.sceneImageUrl})`,
         backgroundSize: 'cover',
@@ -696,7 +718,6 @@ export default function StoryPlayer({
         transition: 'filter 0.5s ease'
       };
     }
-    console.log("Using default gradient background");
     
     // デフォルトのグラデーション背景
     return {

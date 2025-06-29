@@ -104,7 +104,7 @@ export default function CreateStory() {
     
     try {
       // APIを呼び出してストーリーを生成
-      const response = await fetch('/api/story/generate', {
+      const response = await fetch('/api/story/generates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,8 +131,6 @@ export default function CreateStory() {
         
         throw new Error(errorData.error || 'ストーリー生成に失敗しました');
       }
-      
-      // const data = await response.json();
       
       // 成功したら詳細ページへ（現在はダッシュボードに戻る）
       router.push('/dashboard');
